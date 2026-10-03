@@ -1,0 +1,25 @@
+# Python and local environment files
+.venv/
+venv/
+env/
+.conda/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+*.env
+!.env.example
+
+# Local Streamlit configuration may contain secrets
+.streamlit/
+
+# Source datasets, curation ledgers, generated tables, and local outputs
+data/raw/
+data/curation/
+data/curated/
+data/mart/
+data/real_pilot/
+data/public_pilot/
+data/generated/
+data/outputs/
+outputs/
