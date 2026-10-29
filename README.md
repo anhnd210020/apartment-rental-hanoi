@@ -1,45 +1,48 @@
-﻿# IT5427: Hanoi apartment rental data prototype
+# IT5427: Hanoi apartment rental data prototype
 
-The project keeps its synthetic fixtures separate from an exploratory public-data prototype. The prototype uses one Kaggle-published rental-oriented listing dataset, OpenStreetMap context, and WorldPop context. It does **not** establish three independent rental-listing sources or represent the whole Hanoi market.
+This project keeps its synthetic fixtures separate from an exploratory public-data prototype. The public path uses **one rental-oriented listing dataset** from Kaggle, an optional independent NEST Living aggregate rent index, and two geographic context datasets: OpenStreetMap (OSM) and WorldPop. NEST provides aggregate cells, not individual listing records. OSM and WorldPop remain integrated with the Kaggle listing summary at Hanoi city grain; the separate NEST city/district/type marts are not joined to Kaggle because their populations and time bases do not match. The project does not claim three independent rental-listing platforms, streaming, or market-wide estimates.
 
-## Run on the existing Windows `dev` environment
+## Run locally on the existing Windows environment
 
-Open PowerShell in this folder and configure the existing Java/Spark setup:
+Open PowerShell and use the current project location and existing `dev` Python/Java/Spark installation:
 
 ```powershell
+$project = 'D:\Dai Hoc\Master\2026A\IT5427\Project\apartment-rental-hanoi'
+Set-Location $project
+$py = 'D:\envs\dev\Scripts\python.exe'
 $env:JAVA_HOME = 'D:\Apps\Temurin17\jdk-17.0.20.1+1'
-$env:PATH = "$env:JAVA_HOME\bin;D:\Apps\hadoop-3.3.6\bin;D:\envs\dev\Scripts;$env:PATH"
 $env:HADOOP_HOME = 'D:\Apps\hadoop-3.3.6'
-$env:PYSPARK_PYTHON = 'D:\envs\dev\Scripts\python.exe'
-$env:PYSPARK_DRIVER_PYTHON = 'D:\envs\dev\Scripts\python.exe'
+$env:PATH = "$env:JAVA_HOME\bin;$env:HADOOP_HOME\bin;D:\envs\dev\Scripts;$env:PATH"
+$env:PYSPARK_PYTHON = $py
+$env:PYSPARK_DRIVER_PYTHON = $py
 ```
 
-Run the synthetic fixture path or the public-data path:
+Run the synthetic fixture pipeline, or prepare and run the public-data pipeline:
 
 ```powershell
-python pipeline.py                         # synthetic fixtures only
-python prepare_public_context.py           # reuses the existing Hanoi OSM/WorldPop clip
-python prepare_worldpop_cells.py           # valid WorldPop cells -> gzip CSV for Spark
-python pipeline.py --dataset public        # Spark listings + OSM summary + WorldPop cells
-python compare_geofabrik_snapshots.py --old-manifest data/public_pilot/snapshot_comparison/manifests/vietnam-261001.json --new-manifest data/public_pilot/snapshot_comparison/manifests/vietnam-261002.json --output data/public_pilot/snapshot_comparison/vietnam-261001_to_261002.json
-python -m streamlit run dashboard.py
+& $py pipeline.py                         # synthetic fixtures only
+& $py prepare_public_context.py            # reuses existing OSM/raster preparation
+& $py prepare_worldpop_cells.py            # reuses or creates valid-cell CSV.gz
+& $py pipeline.py --dataset public         # public Spark pipeline
+& $py ingest_nest_rent_index.py --input 'data\raw\nest_living\snapshots\nest_hanoi_rent_index_20261029T082644540Z.csv' --retrieved-at-utc '2026-10-29T08:27:06.485Z'
+& $py compare_nest_snapshots.py             # records unavailable until two genuine captures exist
+& $py -m streamlit run dashboard.py --server.port 8501
 ```
 
-`prepare_public_context.py --rebuild` explicitly repeats the geospatial scan and raster clip. It is not needed for the current prepared artifacts. Raw public source files and prepared Parquet outputs are kept under `data/` and are separate from synthetic fixtures.
+Future NEST snapshots must be downloaded manually through the public CSV link on the [rent-index page](https://nestliving.vn/rent-index). The ingestion command never contacts NEST; provide the exact local path and retrieval time. See [the NEST source note](docs/nest_living_source_note.md) for schema, counts, provenance, SHA-256, methodology, and the unresolved reuse terms.
 
-## Sources, grain, and limits
+Open `http://127.0.0.1:8501/?view=public` for the public-data prototype or `http://127.0.0.1:8501/?view=synthetic` for synthetic fixtures. The dashboard clearly labels the synthetic view. The public view labels amounts as listed amounts because the time basis is unknown for most rows.
 
-- **Kaggle Vietnam House Rent Dataset**, by Van Viet Hieu Anh: [dataset page](https://www.kaggle.com/datasets/vanviethieuanh/vietnam-house-rent-dataset). The uploader declares CC0. Its repository says records were scraped from websites but does not identify the original websites. Original platform provenance and third-party rights remain unresolved; keep source rows local and do not redistribute them. The CSV fields are title, publication string, address, area, and listed amount. Amounts are described in million VND, but the time basis is unknown for most rows. Only nine rows with explicit monthly title evidence and matching structured amounts enter monthly summaries.
-- **OpenStreetMap via Geofabrik Vietnam extract**: [Geofabrik source and snapshots](https://download.geofabrik.de/asia/vietnam.html). OSM data is under ODbL 1.0. Attribute “© OpenStreetMap contributors” and link [openstreetmap.org/copyright](https://www.openstreetmap.org/copyright). The dashboard uses city-level context.
-- **WorldPop Vietnam 2020 population counts**: [dataset record](https://hub.worldpop.org/geodata/summary?id=6449). The raster is CC BY 4.0; cite WorldPop / University of Southampton and DOI [10.5258/SOTON/WP00645](https://doi.org/10.5258/SOTON/WP00645).
-- **TiniX Vietnam Real Estate Listings** is excluded from rent analysis because it has no validated rental-versus-sale label.
+## Latest verified local run — 2026-10-29
 
-The public run screens 13,785 listing rows, including 3,284 Hanoi rows, and produces 102 positive-amount/area rows after the corrected title review. OSM and WorldPop are processed at their own grains: one prepared Hanoi OSM summary row and 408,151 valid WorldPop cells, then one city aggregate for each. Spark joins the two context aggregates and the listing summary by the explicit key `city_key=VN-HN`. No OSM or population values are attached to individual listing rows: the listings have no reliable coordinates or structured district/ward IDs.
+Public manifest **`public-20261029T083945Z`** records 13,785 Kaggle rows, including 3,284 Hanoi rows; 102 title-reviewed likely apartment-rental records with positive amount and area; 408,151 valid WorldPop cells; and one Kaggle + OSM + WorldPop city row. The Kaggle/OSM/WorldPop command took 109.395 Spark seconds and 119.968 seconds between manifest timestamps. The separately ingested NEST snapshot **`nest-20261029T082644540Z`** records 45 aggregate cells: 1 city, 10 district, 29 district-by-bedroom, and 5 property-type cells; 28 published and 17 suppressed. NEST's city cell reports 890 homes and a median monthly asking rent of 19.1 million VND at source capture `2026-10-29T08:26:44.540Z`. This is NEST's own inventory, not the Hanoi market. The comparison has one genuine snapshot and therefore no change counts. Timings are single local runs, not performance benchmarks.
 
-The dated OSM comparisons use the downloaded 2026-09-30 Geofabrik PBF and official consecutive update sequences 4926 (2026-10-01) and 4927 (2026-10-02). The full newer PBFs were not downloaded; the official `.osc.gz` deltas and frozen `state.txt` manifests were used. Sequence 4927 was replayed twice with identical manifests and change counts. This is partial OSM batch-change evidence, not streaming or rental-listing Velocity. Kaggle remains one listing snapshot last updated in 2022, and WorldPop remains a 2020 reference-year product. See [the demo runbook](docs/demo_runbook.md) for startup commands and caveats.
+## Scope and data limits
 
-The dashboard labels all mixed/unknown-period amounts as **listed amount** and **listed amount per m²**. Its separate monthly summary shows n=9 and a small-sample caveat. Full lineage, Parquet sizes, Spark times, snapshot counts, and limitations are in [`docs/public_data_implementation.md`](docs/public_data_implementation.md). The audit sample and price semantics are in [`docs/data_quality_and_analysis_review.md`](docs/data_quality_and_analysis_review.md).
+- Kaggle remains the only rental-oriented listing dataset; its uploader declares CC0, but original platforms and third-party rights remain unresolved. NEST adds an independent publisher's aggregate rental source, not a second listing dataset. NEST's terms do not state an open license or explicit reuse grant for the CSV; it is an optional local input with attribution, and its raw file is excluded from the submission ZIP.
+- Most listed amounts have unknown time basis; only the verified monthly subset is used for monthly statistics.
+- Listing rows have no reliable coordinates or structured district/ward IDs. Geographic context is integrated only at Hanoi city level.
+- OSM updates provide dated batch-change evidence only. One NEST aggregate snapshot is recorded; two genuine CSV snapshots are required before comparing aggregate cells. Neither source establishes rental-listing Velocity or streaming.
+- `data/fixtures/` contains synthetic records, never real rental observations.
 
-## Synthetic fixture notice
-
-Every record in `data/fixtures/` is synthetic test data. It is not a real rental listing and must not be presented as one. The default `python pipeline.py` path uses only these fixtures.
+For the verified five-minute walkthrough, see [the demo runbook](docs/demo_runbook.md) and [the Vietnamese live demo script](docs/live_demo_script.md). Details and figures are in [the final report](docs/final_report.md).
