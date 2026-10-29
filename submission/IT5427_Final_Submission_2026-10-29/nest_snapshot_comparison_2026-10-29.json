@@ -1,0 +1,187 @@
+{
+  "publisher": "NEST Living",
+  "comparison_grain": "aggregate index cell keyed by cut, source district key, bedroom class, and property type",
+  "available_snapshots": 2,
+  "required_snapshots": 2,
+  "snapshots": [
+    {
+      "snapshot_id": "nest-20261029T082644540Z",
+      "source_captured_at_utc": "2026-10-29T08:26:44.540Z",
+      "retrieved_at_utc": "2026-10-29T08:27:06.485Z",
+      "sha256": "af233deb251762a2a4065704087b3844acf3cd76accb7fd5d91d1eb6b06b268e",
+      "aggregate_cells": 45
+    },
+    {
+      "snapshot_id": "nest-20261029T091525078Z",
+      "source_captured_at_utc": "2026-10-29T09:15:25.078Z",
+      "retrieved_at_utc": "2026-10-29T09:18:31.870Z",
+      "sha256": "3574de70a9787d99a65ae68b412f10df55d80b195c0a5088c4923601049a638a",
+      "aggregate_cells": 45
+    }
+  ],
+  "interpretation": "Any changes describe NEST aggregate cells only; they are not listing-record changes or rental-listing Velocity.",
+  "status": "compared",
+  "comparison": {
+    "old_source_captured_at_utc": "2026-10-29T08:26:44.540Z",
+    "old_retrieved_at_utc": "2026-10-29T08:27:06.485Z",
+    "new_source_captured_at_utc": "2026-10-29T09:15:25.078Z",
+    "new_retrieved_at_utc": "2026-10-29T09:18:31.870Z",
+    "old_snapshot_id": "nest-20261029T082644540Z",
+    "new_snapshot_id": "nest-20261029T091525078Z",
+    "shared_cells": 45,
+    "added_cells": 0,
+    "removed_cells": 0,
+    "changed_cells": 7,
+    "unchanged_shared_cells": 38,
+    "changed_cell_counts_by_field": {
+      "homes": 7,
+      "median_vnd": 3,
+      "p25_vnd": 2,
+      "p75_vnd": 2,
+      "published": 0,
+      "floor_at_capture": 0
+    },
+    "changed_cell_details": [
+      {
+        "cell_key": {
+          "cut": "city",
+          "district": "",
+          "bedroom_class": "",
+          "property_type": ""
+        },
+        "changed_fields": [
+          "homes",
+          "p25_vnd"
+        ],
+        "old_values": {
+          "homes": "890",
+          "p25_vnd": "12900000"
+        },
+        "new_values": {
+          "homes": "894",
+          "p25_vnd": "12700000"
+        }
+      },
+      {
+        "cell_key": {
+          "cut": "district",
+          "district": "badinh",
+          "bedroom_class": "",
+          "property_type": ""
+        },
+        "changed_fields": [
+          "homes",
+          "p25_vnd",
+          "p75_vnd"
+        ],
+        "old_values": {
+          "homes": "159",
+          "p25_vnd": "14300000",
+          "p75_vnd": "20400000"
+        },
+        "new_values": {
+          "homes": "160",
+          "p25_vnd": "14400000",
+          "p75_vnd": "20500000"
+        }
+      },
+      {
+        "cell_key": {
+          "cut": "district",
+          "district": "tayho",
+          "bedroom_class": "",
+          "property_type": ""
+        },
+        "changed_fields": [
+          "homes",
+          "median_vnd"
+        ],
+        "old_values": {
+          "homes": "651",
+          "median_vnd": "20000000"
+        },
+        "new_values": {
+          "homes": "654",
+          "median_vnd": "19100000"
+        }
+      },
+      {
+        "cell_key": {
+          "cut": "district_bedroom",
+          "district": "badinh",
+          "bedroom_class": "2 bedrooms",
+          "property_type": ""
+        },
+        "changed_fields": [
+          "homes"
+        ],
+        "old_values": {
+          "homes": "39"
+        },
+        "new_values": {
+          "homes": "40"
+        }
+      },
+      {
+        "cell_key": {
+          "cut": "district_bedroom",
+          "district": "tayho",
+          "bedroom_class": "1 bedroom",
+          "property_type": ""
+        },
+        "changed_fields": [
+          "homes",
+          "median_vnd"
+        ],
+        "old_values": {
+          "homes": "245",
+          "median_vnd": "13500000"
+        },
+        "new_values": {
+          "homes": "247",
+          "median_vnd": "13200000"
+        }
+      },
+      {
+        "cell_key": {
+          "cut": "district_bedroom",
+          "district": "tayho",
+          "bedroom_class": "2 bedrooms",
+          "property_type": ""
+        },
+        "changed_fields": [
+          "homes",
+          "p75_vnd"
+        ],
+        "old_values": {
+          "homes": "193",
+          "p75_vnd": "36000000"
+        },
+        "new_values": {
+          "homes": "194",
+          "p75_vnd": "35900000"
+        }
+      },
+      {
+        "cell_key": {
+          "cut": "type",
+          "district": "",
+          "bedroom_class": "",
+          "property_type": "Apartment"
+        },
+        "changed_fields": [
+          "homes",
+          "median_vnd"
+        ],
+        "old_values": {
+          "homes": "704",
+          "median_vnd": "19800000"
+        },
+        "new_values": {
+          "homes": "708",
+          "median_vnd": "19500000"
+        }
+      }
+    ]
+  }
+}

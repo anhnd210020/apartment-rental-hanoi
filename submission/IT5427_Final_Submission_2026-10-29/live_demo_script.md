@@ -1,6 +1,6 @@
 # Kịch bản demo trực tiếp 5 phút
 
-**Đã kiểm tra:** 2026-10-29. Số liệu public tham chiếu manifest `public-20261029T083945Z`; NEST tham chiếu capture `nest-20261029T082644540Z`. Khởi động dashboard trước phần trình bày; không cần chạy lại Spark trong năm phút demo.
+**Đã kiểm tra:** 2026-10-29. Số liệu public tham chiếu manifest `public-20261029T083945Z`; NEST tham chiếu hai capture `nest-20261029T082644540Z` và `nest-20261029T091525078Z` cùng comparison đã lưu. Khởi động dashboard trước phần trình bày; không cần chạy lại Spark trong năm phút demo.
 
 ## Khởi động từ thư mục dự án
 
@@ -44,7 +44,7 @@ Chỉ vào dashboard listing summary và phần tháng: 102 khoản tiền/diệ
 
 ### 2:05–3:10 — NEST aggregate và độ phủ nguồn
 
-Mở source coverage và NEST section. Nêu 45 aggregate cells: 1 city, 10 district, 29 district-bedroom, 5 property type; 28 công bố và 17 cell bị suppress. City cell có n=890 homes và median 19,1 triệu VND/tháng tại source capture `2026-10-29T08:26:44.540Z`. Property-type chart gắn median với sample size từng cell.
+Mở source coverage và NEST section. Nêu 45 aggregate cells: 1 city, 10 district, 29 district-bedroom, 5 property type; 28 công bố và 17 cell bị suppress. City cell mới nhất có n=894 homes, median 19,1 triệu VND/tháng, p25 12,7M và p75 30,5M tại source capture `2026-10-29T09:15:25.078Z`. Hai capture cách nhau 48 phút 40,538 giây; 7/45 aggregate cells đổi, 38 giữ nguyên, không thêm/bớt. Đây là thay đổi aggregate của NEST, không phải rental-listing Velocity. Property-type chart gắn median với sample size từng cell.
 
 **Nói:** “Đây là asking rents từ inventory của NEST, không phải toàn thị trường và không phải từng listing. NEST có population và time basis khác Kaggle nên tôi không so sánh trực tiếp hai bộ số. Terms không nêu open license hoặc quyền reuse CSV rõ; đây là optional local aggregate input, có attribution và caveat.”
 
@@ -73,7 +73,7 @@ Public manifest ghi 109,395 giây Spark và 119,968 giây elapsed trong một l�
 & $py prepare_public_context.py
 & $py prepare_worldpop_cells.py
 & $py pipeline.py --dataset public
-& $py ingest_nest_rent_index.py --input 'data\raw\nest_living\snapshots\nest_hanoi_rent_index_20261029T082644540Z.csv' --retrieved-at-utc '2026-10-29T08:27:06.485Z'
+& $py ingest_nest_rent_index.py --input 'data\raw\nest_living\snapshots\nest_hanoi_rent_index_20261029T091525078Z.csv' --retrieved-at-utc '2026-10-29T09:18:31.870Z'
 & $py compare_nest_snapshots.py
 ```
 

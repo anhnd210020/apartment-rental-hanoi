@@ -1,6 +1,6 @@
 # Câu hỏi bảo vệ dự kiến và câu trả lời
 
-Các câu trả lời dưới đây bám theo code, public manifest `public-20261029T083945Z`, NEST snapshot `nest-20261029T082644540Z` và các báo cáo QA hiện có. Những con số chỉ mô tả prototype cục bộ và mẫu hiện tại.
+Các câu trả lời dưới đây bám theo code, public manifest `public-20261029T083945Z`, NEST snapshots `nest-20261029T082644540Z` và `nest-20261029T091525078Z`, cùng các báo cáo QA hiện có. Những con số chỉ mô tả prototype cục bộ và mẫu hiện tại.
 
 ## Nguồn dữ liệu và phạm vi
 
@@ -31,7 +31,7 @@ Audit G1 ghi nhận pilot thủ công ba bản ghi, trong đó một dòng qua c
 
 ### 7. Đã đáp ứng Velocity chưa?
 
-Chưa có bằng chứng rental-listing Velocity. OSM có batch evidence: Geofabrik sequences 4925, 4926 và 4927 được ghi ngày 2026-09-30 đến 2026-10-02; seq. 4927 có 14.572 create / 5.901 modify / 2.284 delete. NEST có đúng một aggregate CSV capture ngày 2026-10-29; cần capture thật thứ hai mới so sánh cell changes. Không có listing feed hoặc snapshot listing lặp lại, nên không tuyên bố streaming hay rental-listing Velocity.
+Chưa có bằng chứng rental-listing Velocity. OSM có batch evidence riêng: Geofabrik sequences 4925, 4926 và 4927 được ghi ngày 2026-09-30 đến 2026-10-02; seq. 4927 có 14.572 create / 5.901 modify / 2.284 delete. Hai NEST aggregate CSV captures ngày 2026-10-29 cách nhau 48 phút 40,538 giây; comparison ghi 7/45 aggregate cells thay đổi, 38 giữ nguyên, không thêm/bớt. Đây là thay đổi ở chỉ số tổng hợp của NEST, không phải thay đổi listing records. Không có listing feed hoặc snapshot listing lặp lại, nên không tuyên bố streaming hay rental-listing Velocity.
 
 ### 8. Có nối OSM hoặc WorldPop vào từng listing hay từng khu phố không?
 
@@ -65,7 +65,7 @@ Dataset mô tả `price` theo triệu VND nhưng không có time basis chung. QA
 
 ### 15. Kết quả nào được dashboard hiển thị?
 
-Kaggle hiển thị median listed amount 3.500.000 VND, median area 30 m² và median listed amount per m² 120.000 VND/m²; time basis của 92/102 khoản chưa biết. Tập Kaggle có kỳ tháng xác minh là n=9, median 3.200.000 VND/tháng. Riêng NEST city cell có median asking rent 19.100.000 VND/tháng trên 890 NEST homes tại capture 2026-10-29; type cells có sample sizes riêng và 17 aggregate cells bị suppress. Hai nguồn có record universe, thời điểm và định nghĩa khác nhau, nên không so sánh trực tiếp hoặc gộp median.
+Kaggle hiển thị median listed amount 3.500.000 VND, median area 30 m² và median listed amount per m² 120.000 VND/m²; time basis của 92/102 khoản chưa biết. Tập Kaggle có kỳ tháng xác minh là n=9, median 3.200.000 VND/tháng. NEST city cell mới nhất có median asking rent 19.100.000 VND/tháng trên 894 NEST homes tại capture `2026-10-29T09:15:25.078Z`; p25 là 12.700.000 và p75 là 30.500.000 VND. Mỗi capture có 45 cell, trong đó 17 cell suppress rent statistics. Comparison giữa hai captures tìm thấy 7 cell thay đổi; đây là aggregate-cell changes, không phải listing Velocity. Hai nguồn có record universe và định nghĩa khác nhau, nên không so sánh trực tiếp hoặc gộp median.
 
 ### 16. Hệ thống xử lý trùng lặp và entity resolution như thế nào?
 
@@ -81,7 +81,7 @@ Mục tiêu của phiên bản này là Big Data Integration and Processing: n�
 
 ### 19. Dự án có thể kết luận mức thuê hoặc tác động tiện ích của toàn Hà Nội không?
 
-Không. Có một dataset listing cũ với nhãn dựa một phần vào title review; chỉ chín dòng Kaggle có time basis tháng xác minh. NEST là aggregate từ inventory riêng của publisher và mới có một capture. Không có spatial join listing-to-neighborhood. Chúng tôi chỉ trình bày mô tả thăm dò, không đưa ra market-wide rents, xu hướng hiện tại hay tác động nhân quả của tiện ích.
+Không. Có một dataset listing cũ với nhãn dựa một phần vào title review; chỉ chín dòng Kaggle có time basis tháng xác minh. NEST là aggregate từ inventory riêng của publisher; hai captures gần nhau ghi nhận thay đổi một số cell, nhưng không đại diện toàn thị trường hoặc đo listing Velocity. Không có spatial join listing-to-neighborhood. Chúng tôi chỉ trình bày mô tả thăm dò, không đưa ra market-wide rents, xu hướng hiện tại hay tác động nhân quả của tiện ích.
 
 ### 20. Những giấy phép nào cần ghi công?
 
@@ -89,4 +89,4 @@ Theo hồ sơ hiện tại, OpenStreetMap cần ghi “© OpenStreetMap contribu
 
 ### 21. Snapshot NEST nào đã so sánh được?
 
-Chỉ có một capture CSV thật, source timestamp `2026-10-29T08:26:44.540Z`, retrieval timestamp `2026-10-29T08:27:06.485Z`. Công cụ comparison báo `insufficient_snapshots`; không tạo earlier snapshot giả và không báo changed-cell count. Nếu có capture thứ hai được tải thủ công qua link công khai, công cụ sẽ so sánh aggregate cell keys/metrics và lưu cả hai timestamp. Kết quả khi đó vẫn là thay đổi aggregate cells, không phải rental-listing Velocity.
+Hai capture CSV thật được tải riêng qua link công khai. Capture thứ nhất: source `2026-10-29T08:26:44.540Z`, retrieval `2026-10-29T08:27:06.485Z`; capture thứ hai: source `2026-10-29T09:15:25.078Z`, retrieval `2026-10-29T09:18:31.870Z`. `compare_nest_snapshots.py` xác nhận 45 shared cells, 7 changed, 38 unchanged, 0 added, 0 removed. `homes` đổi ở 7 cells, median ở 3, p25 ở 2, p75 ở 2; publication flag và sample floor không đổi. City cell tăng từ 890 lên 894 homes; median giữ 19.100.000 VND, p25 giảm từ 12.900.000 xuống 12.700.000, p75 giữ 30.500.000. Đây là thay đổi trong thống kê aggregate của NEST, không phải thay đổi listing records hay rental-listing Velocity. Các tệp, hashes và đánh giá terms nằm trong `docs/nest_living_source_note.md`.

@@ -16,13 +16,19 @@
       "intended_public_csv_download_url": "https://nestliving.vn/rent-index/rent-index.csv",
       "methodology_url": "https://nestliving.vn/rent-index",
       "terms_url": "https://nestliving.vn/terms",
-      "source_capture_time_utc": "2026-10-29T08:26:44.540Z",
-      "retrieved_at_utc": "2026-10-29T08:27:06.485Z",
-      "local_snapshot_path": "data/raw/nest_living/snapshots/nest_hanoi_rent_index_20261029T082644540Z.csv",
+      "source_capture_time_utc": "2026-10-29T09:15:25.078Z",
+      "retrieved_at_utc": "2026-10-29T09:18:31.870Z",
+      "local_snapshot_path": "data/raw/nest_living/snapshots/nest_hanoi_rent_index_20261029T091525078Z.csv",
       "bytes": 5039,
-      "sha256": "af233deb251762a2a4065704087b3844acf3cd76accb7fd5d91d1eb6b06b268e",
+      "sha256": "3574de70a9787d99a65ae68b412f10df55d80b195c0a5088c4923601049a638a",
       "schema": ["cut", "district", "district_name", "bedroom_class", "property_type", "homes", "median_vnd", "p25_vnd", "p75_vnd", "published", "floor_at_capture", "captured_at"],
       "profile": {"aggregate_cells": 45, "city_rows": 1, "district_rows": 10, "district_bedroom_rows": 29, "property_type_rows": 5, "published_cells": 28, "suppressed_small_sample_cells": 17},
+      "snapshots": [
+        {"snapshot_id":"nest-20261029T082644540Z","source_capture_time_utc":"2026-10-29T08:26:44.540Z","retrieved_at_utc":"2026-10-29T08:27:06.485Z","bytes":5039,"sha256":"af233deb251762a2a4065704087b3844acf3cd76accb7fd5d91d1eb6b06b268e"},
+        {"snapshot_id":"nest-20261029T091525078Z","source_capture_time_utc":"2026-10-29T09:15:25.078Z","retrieved_at_utc":"2026-10-29T09:18:31.870Z","bytes":5039,"sha256":"3574de70a9787d99a65ae68b412f10df55d80b195c0a5088c4923601049a638a"}
+      ],
+      "snapshot_comparison": {"status":"compared","shared_cells":45,"changed_cells":7,"unchanged_cells":38,"added_cells":0,"removed_cells":0,"changed_cell_counts_by_field":{"homes":7,"median_vnd":3,"p25_vnd":2,"p75_vnd":2,"published":0,"floor_at_capture":0},"interpretation":"NEST aggregate-cell changes only; not individual listing changes or rental-listing Velocity."},
+      "latest_city_cell": {"homes":894,"median_vnd":19100000,"p25_vnd":12700000,"p75_vnd":30500000},
       "license_and_terms_assessment": "Terms prohibit automated harvesting/copying listing content but state no open license or explicit CSV reuse grant. Optional local aggregate input; attribution retained; raw CSV excluded from Git and submission ZIP; reuse rights remain unclear."
     }
   ]

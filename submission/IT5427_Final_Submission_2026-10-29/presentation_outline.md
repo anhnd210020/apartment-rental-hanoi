@@ -1,7 +1,7 @@
 # Dàn ý thuyết trình đồ án IT5427
 
 **Thời lượng mục tiêu:** 7–10 phút; dàn ý dưới đây khoảng **8 phút 50 giây**.<br>
-**Cơ sở số liệu:** public manifest `public-20261029T083945Z`, NEST snapshot `nest-20261029T082644540Z`, đầu ra Parquet và các báo cáo QA trong repository.
+**Cơ sở số liệu:** public manifest `public-20261029T083945Z`, NEST snapshots `nest-20261029T082644540Z` và `nest-20261029T091525078Z`, comparison output và các báo cáo QA trong repository.
 
 ## Slide 1 — Đề tài và mục tiêu (0:00–0:25)
 
@@ -52,11 +52,11 @@
 |---|---|---|
 | Volume | Kaggle 13.785 dòng; 3.284 Hà Nội; 102 curated; NEST 45 aggregate cells (17 suppressed); 408.151 ô WorldPop | Context cells và NEST cells không phải listing count |
 | Variety | Kaggle CSV, NEST aggregate CSV, OSM PBF/JSON/diff, WorldPop GeoTIFF/CSV.gz, separate Parquet marts | NEST là một nguồn aggregate độc lập; không được gộp vào Kaggle |
-| Velocity | OSM seq. 4926: 9.555/6.385/1.969; seq. 4927: 14.572/5.901/2.284 create/modify/delete; NEST một capture | Chưa có hai NEST captures; không có repeat listing snapshot; không phải streaming |
+| Velocity | OSM seq. 4926: 9.555/6.385/1.969; seq. 4927: 14.572/5.901/2.284 create/modify/delete; NEST 2 captures, 7/45 aggregate cells changed | NEST change là thay đổi chỉ số aggregate, không phải listing Velocity; không có repeat listing snapshot hoặc streaming |
 
 **Hình gợi ý:** Ba cột Volume / Variety / Velocity; dùng màu khác nhau cho listing và context.
 
-**Ghi chú nói:** Volume gồm đầu vào ở các grain khác nhau. OSM cho thấy thay đổi batch địa lý; NEST chỉ có một aggregate capture nên chưa thể so sánh cell changes. Dự án chưa đo độ mới hoặc tốc độ thay đổi của listing thuê.
+**Ghi chú nói:** Volume gồm đầu vào ở các grain khác nhau. OSM cho thấy thay đổi batch địa lý; hai NEST captures cho phép so sánh aggregate cells và ghi nhận 7 cell thay đổi, 38 cell không đổi, không thêm/bớt. Dự án vẫn chưa đo độ mới hoặc tốc độ thay đổi của individual rental listings.
 
 ## Slide 5 — Kiến trúc xử lý (2:50–3:50)
 
@@ -136,12 +136,13 @@ flowchart LR
 - Median khoản niêm yết: 3.500.000 VND; kỳ hạn thường chưa biết
 - Median `listed amount per m²`: 120.000 VND/m²
 - 9 dòng có kỳ tháng được xác minh: median 3.200.000 VND/tháng
-- NEST city cell: median 19,1M VND/tháng, n=890; type cells show their own n
+- NEST city cell: median 19,1M VND/tháng, n=894; p25=12,7M, p75=30,5M; type cells show their own n
+- Two NEST captures: 7/45 aggregate cells changed; 38 unchanged, 0 added/removed (not listing Velocity)
 - OSM và WorldPop hiển thị riêng ở cấp thành phố
 
 **Hình gợi ý:** Biểu đồ NEST monthly asking-rent theo property type có sample-size labels; dashboard source-coverage table. Không đặt NEST và Kaggle lên cùng thang so sánh.
 
-**Ghi chú nói:** Trong 102 dòng Kaggle số học, 92 chưa rõ time basis và chỉ 9 có kỳ tháng xác minh. NEST city median 19,1 triệu VND/tháng dựa trên 890 NEST homes tại capture 2026-10-29; đây là NEST inventory, không phải thị trường. Hai nguồn không được so sánh trực tiếp. Population là ước lượng WorldPop năm 2020.
+**Ghi chú nói:** Trong 102 dòng Kaggle số học, 92 chưa rõ time basis và chỉ 9 có kỳ tháng xác minh. NEST city median 19,1 triệu VND/tháng dựa trên 894 NEST homes tại capture `2026-10-29T09:15:25.078Z`; p25 là 12,7M và p75 là 30,5M. Comparison giữa hai captures ghi nhận 7 aggregate cells thay đổi. Đây là NEST inventory, không phải thị trường và không so sánh trực tiếp với Kaggle. Population là ước lượng WorldPop năm 2020.
 
 ## Slide 10 — Thử nghiệm và bằng chứng batch OSM (7:15–8:10)
 
@@ -149,13 +150,13 @@ flowchart LR
 
 - Synthetic: 7 raw / 5 valid / 4 unique
 - Dashboard AppTest: hai chế độ không exception; HTTP 200 kiểm tra 2026-10-29
-- NEST: 45 cells, 28 published, 17 suppressed; 1 genuine capture nên chưa có change counts
+- NEST: 2 genuine captures; 45 shared cells, 7 changed, 38 unchanged, 0 added/removed; 28 published, 17 suppressed in each capture
 - OSM seq. 4927: 14.572 create / 5.901 modify / 2.284 delete
 - Replay: counts ổn định; 0,549 s và 0,511 s
 
 **Hình gợi ý:** Ảnh terminal/manifest cùng đường thời gian OSM 4925 → 4926 → 4927.
 
-**Ghi chú nói:** Public run và Parquet hiện tại có lineage trong manifest. Replay kiểm tra xử lý batch lặp lại theo kết quả nghiệp vụ; timestamp và runtime thay đổi. Những thay đổi đó là OSM toàn Việt Nam, không phải cập nhật listing thuê và không cấu thành streaming.
+**Ghi chú nói:** Public run và Parquet hiện tại có lineage trong manifest. Replay kiểm tra xử lý batch lặp lại theo kết quả nghiệp vụ; timestamp và runtime thay đổi. Những thay đổi đó là OSM toàn Việt Nam. NEST comparison chỉ ghi nhận aggregate-cell differences; cả hai nguồn đều không đo thay đổi individual rental listings và không cấu thành streaming.
 
 ## Slide 11 — Kết luận và quyết định còn mở (8:10–8:50)
 
@@ -171,7 +172,7 @@ flowchart LR
 
 ## Câu kết đề xuất
 
-“Dự án chứng minh pipeline tích hợp đa định dạng với grain rõ ràng: một listing dataset, một nguồn aggregate rental độc lập và hai nguồn context. Kết quả giá vẫn thăm dò; chỉ chín khoản Kaggle có kỳ tháng xác minh, còn NEST mới có một aggregate snapshot.”
+“Dự án chứng minh pipeline tích hợp đa định dạng với grain rõ ràng: một listing dataset, một nguồn aggregate rental độc lập và hai nguồn context. Kết quả giá vẫn thăm dò; chỉ chín khoản Kaggle có kỳ tháng xác minh, còn so sánh hai NEST captures ghi nhận bảy aggregate cells thay đổi, không phải rental-listing Velocity.”
 
 ## Liên kết nguồn để đặt ở slide tài liệu tham khảo
 

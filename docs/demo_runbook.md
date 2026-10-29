@@ -1,6 +1,6 @@
 # IT5427 five-minute demo runbook
 
-**Verified:** 2026-10-29. The walkthrough uses public manifest `public-20261029T083945Z`, NEST snapshot `nest-20261029T082644540Z`, and the existing Windows `dev` Python, Java 17, Hadoop and Spark setup. Start the dashboard before the five-minute presentation; rerunning Spark is optional preparation, not part of the timed walkthrough.
+**Verified:** 2026-10-29. The walkthrough uses public manifest `public-20261029T083945Z`, NEST snapshots `nest-20261029T082644540Z` and `nest-20261029T091525078Z`, and the existing Windows `dev` Python, Java 17, Hadoop and Spark setup. Start the dashboard before the five-minute presentation; rerunning Spark is optional preparation, not part of the timed walkthrough.
 
 ## Start the dashboard from this project folder
 
@@ -26,7 +26,7 @@ Open `http://127.0.0.1:8501/?view=public`. Switch to **Synthetic fixtures** for 
 - Public input: 13,785 source listing rows; 3,284 Hanoi rows; 303 manually reviewed apartment-cue candidates; 106 likely whole-apartment rental titles; 102 with usable positive amount and area.
 - Context: 408,151 valid WorldPop cells; one OSM Hanoi aggregate; one integrated Hanoi city row.
 - Timing: public pipeline Spark total 109.395 seconds; elapsed time between manifest timestamps 119.968 seconds. This is one local run, not a benchmark.
-- NEST: 45 aggregate cells (1 city, 10 district, 29 district-bedroom, 5 property-type); 28 published and 17 suppressed. The city cell reports n=890 homes and median 19.1M VND/month at capture `2026-10-29T08:26:44.540Z`. Only one genuine capture exists, so there are no change counts.
+- NEST: each capture has 45 aggregate cells (1 city, 10 district, 29 district-bedroom, 5 property-type); 28 published and 17 suppressed. The latest city cell reports n=894 homes, median 19.1M VND/month, p25=12.7M and p75=30.5M at capture `2026-10-29T09:15:25.078Z`. Two genuine captures share 45 cells: 7 changed, 38 unchanged, 0 added, and 0 removed. This comparison is aggregate-only and does not measure rental-listing Velocity.
 - Synthetic command output: 7 raw, 7 active, 5 valid, 4 unique records. These are generated fixtures, not real listings.
 
 Kaggle remains one rental-oriented listing dataset. NEST is a separately published aggregate rental source from NEST's own inventory. OSM and WorldPop are geographic context. Do not compare NEST medians directly with Kaggle's 102 listed amounts; those have mostly unknown time bases. The NEST CSV remains an optional local input because the terms page does not state an open reuse license or explicit reuse grant.
@@ -46,7 +46,7 @@ A `200` confirms the local Streamlit page responds.
 | 0:00–0:35 | Project title and dashboard warning | The project has one rental-oriented listing dataset, one independent aggregate rental source, and two geographic context sources. NEST provides aggregate cells, not listing records; this is not three listing platforms or a market estimate. |
 | 0:35–1:10 | Manifest ID and measured counts above | The latest local run screened 13,785 rows, including 3,284 Hanoi rows. Manual title review covered 303 apartment-cue candidates; 102 records with usable amount and area enter listed-amount summaries. |
 | 1:10–2:10 | Public dashboard: Kaggle amounts and monthly subset | The median listed amount is 3.50 million VND, but the time basis is unknown for 92 of 102 rows. Monthly statistics use only 9 verified records; this small historical sample is exploratory. |
-| 2:10–3:10 | Source coverage and NEST aggregate section | NEST has 45 aggregate cells, 17 suppressed cells, and one city cell with n=890. It describes NEST's own homes; do not compare it directly with the Kaggle figures. A second genuine capture is needed for aggregate change counts. |
+| 2:10–3:10 | Source coverage and NEST aggregate section | NEST has 45 cells per capture, 17 suppressed cells, and one latest city cell with n=894. Seven aggregate cells changed between two genuine captures. It describes NEST's own homes; do not compare it directly with the Kaggle figures or call this listing Velocity. |
 | 3:10–4:00 | Public dashboard city-context section | OSM and WorldPop are joined with the Kaggle listing summary at Hanoi city level using `city_key=VN-HN`; no context is attached to individual listings or neighborhoods. NEST remains in separate marts. |
 | 4:00–4:35 | Switch to **Synthetic fixtures** | This path demonstrates the pipeline on generated records only. It reports 7 raw, 7 active, 5 valid, and 4 unique records; these are not real Hanoi observations. |
 | 4:35–5:00 | Return to public view and summarize limits | The Kaggle publisher’s upstream listing provenance and rights remain unresolved. OSM batches do not establish rental-listing Velocity; there is no rental streaming feed or repeat listing snapshot. |
@@ -60,7 +60,7 @@ The latest public Spark run took 119.968 seconds elapsed on this machine. Run th
 & $py prepare_public_context.py
 & $py prepare_worldpop_cells.py
 & $py pipeline.py --dataset public
-& $py ingest_nest_rent_index.py --input 'data\raw\nest_living\snapshots\nest_hanoi_rent_index_20261029T082644540Z.csv' --retrieved-at-utc '2026-10-29T08:27:06.485Z'
+& $py ingest_nest_rent_index.py --input 'data\raw\nest_living\snapshots\nest_hanoi_rent_index_20261029T091525078Z.csv' --retrieved-at-utc '2026-10-29T09:18:31.870Z'
 & $py compare_nest_snapshots.py
 ```
 

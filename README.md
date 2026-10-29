@@ -24,8 +24,8 @@ Run the synthetic fixture pipeline, or prepare and run the public-data pipeline:
 & $py prepare_public_context.py            # reuses existing OSM/raster preparation
 & $py prepare_worldpop_cells.py            # reuses or creates valid-cell CSV.gz
 & $py pipeline.py --dataset public         # public Spark pipeline
-& $py ingest_nest_rent_index.py --input 'data\raw\nest_living\snapshots\nest_hanoi_rent_index_20261029T082644540Z.csv' --retrieved-at-utc '2026-10-29T08:27:06.485Z'
-& $py compare_nest_snapshots.py             # records unavailable until two genuine captures exist
+& $py ingest_nest_rent_index.py --input 'data\raw\nest_living\snapshots\nest_hanoi_rent_index_20261029T091525078Z.csv' --retrieved-at-utc '2026-10-29T09:18:31.870Z'
+& $py compare_nest_snapshots.py             # compares only the two genuine aggregate CSV captures
 & $py -m streamlit run dashboard.py --server.port 8501
 ```
 
@@ -35,14 +35,14 @@ Open `http://127.0.0.1:8501/?view=public` for the public-data prototype or `http
 
 ## Latest verified local run — 2026-10-29
 
-Public manifest **`public-20261029T083945Z`** records 13,785 Kaggle rows, including 3,284 Hanoi rows; 102 title-reviewed likely apartment-rental records with positive amount and area; 408,151 valid WorldPop cells; and one Kaggle + OSM + WorldPop city row. The Kaggle/OSM/WorldPop command took 109.395 Spark seconds and 119.968 seconds between manifest timestamps. The separately ingested NEST snapshot **`nest-20261029T082644540Z`** records 45 aggregate cells: 1 city, 10 district, 29 district-by-bedroom, and 5 property-type cells; 28 published and 17 suppressed. NEST's city cell reports 890 homes and a median monthly asking rent of 19.1 million VND at source capture `2026-10-29T08:26:44.540Z`. This is NEST's own inventory, not the Hanoi market. The comparison has one genuine snapshot and therefore no change counts. Timings are single local runs, not performance benchmarks.
+Public manifest **`public-20261029T083945Z`** records 13,785 Kaggle rows, including 3,284 Hanoi rows; 102 title-reviewed likely apartment-rental records with positive amount and area; 408,151 valid WorldPop cells; and one Kaggle + OSM + WorldPop city row. The Kaggle/OSM/WorldPop command took 109.395 Spark seconds and 119.968 seconds between manifest timestamps. The separately ingested latest NEST snapshot **`nest-20261029T091525078Z`** records 45 aggregate cells: 1 city, 10 district, 29 district-by-bedroom, and 5 property-type cells; 28 published and 17 suppressed. NEST's latest city cell reports 894 homes, median monthly asking rent 19.1 million VND, p25 12.7 million VND and p75 30.5 million VND at source capture `2026-10-29T09:15:25.078Z`. Two genuine captures share 45 cells: 7 changed, 38 unchanged, 0 added, and 0 removed. This describes changes in NEST aggregates only, not individual listings or rental-listing Velocity; NEST's own inventory is not the Hanoi market. Timings are single local runs, not performance benchmarks.
 
 ## Scope and data limits
 
 - Kaggle remains the only rental-oriented listing dataset; its uploader declares CC0, but original platforms and third-party rights remain unresolved. NEST adds an independent publisher's aggregate rental source, not a second listing dataset. NEST's terms do not state an open license or explicit reuse grant for the CSV; it is an optional local input with attribution, and its raw file is excluded from the submission ZIP.
 - Most listed amounts have unknown time basis; only the verified monthly subset is used for monthly statistics.
 - Listing rows have no reliable coordinates or structured district/ward IDs. Geographic context is integrated only at Hanoi city level.
-- OSM updates provide dated batch-change evidence only. One NEST aggregate snapshot is recorded; two genuine CSV snapshots are required before comparing aggregate cells. Neither source establishes rental-listing Velocity or streaming.
+- OSM updates provide dated batch-change evidence only. NEST has two genuine aggregate CSV captures and a 7-cell comparison; neither source establishes rental-listing Velocity or streaming.
 - `data/fixtures/` contains synthetic records, never real rental observations.
 
 For the verified five-minute walkthrough, see [the demo runbook](docs/demo_runbook.md) and [the Vietnamese live demo script](docs/live_demo_script.md). Details and figures are in [the final report](docs/final_report.md).

@@ -193,7 +193,7 @@ def main():
         card(s, 642, 150, 276, 225, "Velocity",
              "OSM seq. 4926: 9,555 / 6,385 / 1,969\nOSM seq. 4927: 14,572 / 5,901 / 2,284\n(create / modify / delete)\n\nBatch evidence only; no rental feed or repeat listing snapshot.",
              GOLD, WHITE, 17, 13)
-        text(s, "NEST has one genuine aggregate capture (17 small-sample cells suppressed); no aggregate change comparison is available yet.",
+        text(s, "NEST: 7 of 45 aggregate cells changed across two captures; 38 unchanged, 0 added/removed. Not listing Velocity.",
              52, 406, 856, 26, 13, MUTED, True, align=2)
         text(s, "OSM batch changes do not establish streaming or rental-listing Velocity.",
              52, 438, 856, 30, 15, RED, True, align=2)
@@ -240,12 +240,12 @@ def main():
 
         # 9 — Dashboard and descriptive results
         s = add_slide(pres, "08 / Dashboard", "NEST monthly aggregates show coverage and sample sizes",
-                      "Data-derived from the 2026-10-29 CSV capture; Kaggle's n=9 monthly subset remains separate.")
+                      "Latest 2026-10-29 capture plus aggregate-cell comparison; Kaggle's n=9 monthly subset remains separate.")
         add_image_contain(s, FIG / "nest_rent_aggregates.png", 52, 121, 856, 380)
 
         # 10 — Verification and OSM batch result
         s = add_slide(pres, "09 / Verification", "Spark paths and both dashboard views passed local checks",
-                      "Pipelines and AppTest rerun on 2026-10-29; the NEST comparison correctly reports one capture.")
+                      "Pipelines, NEST comparison and AppTest checks recorded on 2026-10-29.")
         card(s, 42, 145, 425, 233, "Pipeline and dashboard",
              "Synthetic: 7 raw / 7 active / 5 valid / 4 unique\n\nPublic: 13,785 raw / 3,284 Hanoi / 102 curated / 408,151 WorldPop cells / 1 integrated city row\n\nNEST: 45 cells / 28 published / 17 suppressed\n\nAppTest: both views pass",
              TEAL, WHITE, 17, 14)
@@ -253,7 +253,7 @@ def main():
              "Seq. 4926 → 4927\n\n14,572 creates\n5,901 modifies\n2,284 deletes\n22,757 unique operations; no duplicates\n\nThis is Vietnam-wide OSM batch evidence.",
              GOLD, WHITE, 17, 14)
         rect(s, 42, 403, 875, 74, PALE_RED, None)
-        text(s, "NEST: one aggregate snapshot, no change counts • OSM batch changes remain separate from rental-listing Velocity",
+        text(s, "NEST: 2 captures; 7/45 cells changed, 38 unchanged, 0 added/removed • Aggregate and OSM changes are not rental-listing Velocity",
              58, 421, 843, 34, 16, RED, True, align=2)
 
         # 11 — Conclusion and limitations
@@ -263,7 +263,7 @@ def main():
              "• Reproducible local Spark paths\n\n• Saved quality dispositions and lineage\n\n• Separate NEST aggregate marts\n\n• OSM / WorldPop joined at city grain",
              TEAL, WHITE, 16, 14)
         card(s, 342, 150, 276, 225, "What remains unresolved",
-             "• Kaggle upstream rights\n\n• NEST CSV reuse grant is unstated\n\n• Most Kaggle amounts have unknown time basis\n\n• Only one NEST capture; no listing Velocity",
+             "• Kaggle upstream rights\n\n• NEST CSV reuse grant is unstated\n\n• Most Kaggle amounts have unknown time basis\n\n• NEST differences are aggregate-cell only; no listing Velocity",
              RED, WHITE, 16, 14)
         card(s, 642, 150, 276, 225, "Next decision",
              "Confirm the course definition of multi-source.\n\nIf another listing source is required, obtain permitted listing rows with documented provenance; NEST is aggregate-only.",

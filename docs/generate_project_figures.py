@@ -90,7 +90,7 @@ def architecture_png() -> None:
     rounded_box(ax, (0.35, 0.92), 2.15, 0.87, "NEST public CSV", "Monthly asking-rent\naggregate cells", PURPLE)
     rounded_box(ax, (3.2, 0.92), 2.15, 0.87, "Separate PySpark path", "Validate grain, suppression\nand source provenance", PURPLE, fill="#f7f3fb")
     rounded_box(ax, (6.05, 0.92), 2.25, 0.87, "NEST marts", "City, district, type\nand bedroom cuts", PURPLE)
-    rounded_box(ax, (8.95, 0.92), 2.2, 0.87, "One capture", "45 cells; 17 suppressed\nNo change comparison", PURPLE, fill="#fbf9fd")
+    rounded_box(ax, (8.95, 0.92), 2.2, 0.87, "Two captures", "45 shared; 7 changed\n38 unchanged; 0 added/removed", PURPLE, fill="#fbf9fd")
     arrow(ax, (2.5, 1.35), (3.2, 1.35), PURPLE)
     arrow(ax, (5.35, 1.35), (6.05, 1.35), PURPLE)
     arrow(ax, (8.3, 1.35), (8.95, 1.35), PURPLE)
@@ -132,18 +132,23 @@ def nest_chart() -> None:
     homes = [int(row["homes"]) for row in types]
     city = next(row for row in rows if row["cut"] == "city")
     profile = manifest["profile"]
+    comparison = json.loads((ROOT / "data" / "public_pilot" / "snapshot_comparison" / "nest_living_latest.json").read_text(encoding="utf-8"))
+    delta = comparison["comparison"]
 
     fig = plt.figure(figsize=(12.2, 6.6), dpi=180, facecolor="white")
-    grid = fig.add_gridspec(2, 1, height_ratios=[0.75, 3.4], hspace=0.33)
+    grid = fig.add_gridspec(2, 1, height_ratios=[1.05, 3.35], hspace=0.34)
     top = fig.add_subplot(grid[0])
     top.axis("off")
-    top.text(0.01, 0.9, "NEST Living — monthly asking-rent aggregates", fontsize=17, weight="bold", color=NAVY, transform=top.transAxes)
-    top.text(0.01, 0.36,
+    top.text(0.01, 0.96, "NEST Living — monthly asking-rent aggregates", fontsize=17, weight="bold", color=NAVY, transform=top.transAxes)
+    top.text(0.01, 0.67,
              f"City cell: median {float(city['median_vnd'])/1_000_000:.1f}M VND/month  •  n={int(city['homes']):,} homes  •  captured {manifest['source_captured_at_utc']}",
              fontsize=10, color=INK, transform=top.transAxes)
-    top.text(0.01, -0.03,
+    top.text(0.01, 0.38,
              f"{profile['row_count']} aggregate cells  •  {profile['published_cell_counts']['true']} published  •  {profile['suppressed_cells']} suppressed below sample floor {profile['minimum_sample_floor_values'][0]}",
              fontsize=9, color=MUTED, transform=top.transAxes)
+    top.text(0.01, 0.07,
+             f"Two genuine captures ({delta['old_source_captured_at_utc']} → {delta['new_source_captured_at_utc']}): {delta['changed_cells']} of {delta['shared_cells']} cells changed; {delta['unchanged_shared_cells']} unchanged; {delta['added_cells']} added / {delta['removed_cells']} removed. Aggregate changes only—not rental-listing Velocity.",
+             fontsize=8.2, color=MUTED, transform=top.transAxes)
 
     ax = fig.add_subplot(grid[1])
     bars = ax.barh(labels, medians, color=[BLUE, TEAL, GOLD, PURPLE, "#c16a52"][:len(labels)], height=0.62)

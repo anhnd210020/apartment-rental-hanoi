@@ -1,10 +1,7 @@
 """Export final_report.md to DOCX/PDF through installed Microsoft Word."""
 from pathlib import Path
 import re
-import zipfile
 import argparse
-import argparse
-from xml.etree import ElementTree as ET
 
 import markdown
 import win32com.client as win32
@@ -50,30 +47,6 @@ def build_html(html_path):
         + "</body></html>",
         encoding="utf-8",
     )
-
-
-def remove_external_image_links(docx_path):
-    """Keep the embedded image copies and drop source-folder link targets."""
-    temp = docx_path.with_suffix(".portable.tmp")
-    rel_ns = "http://schemas.openxmlformats.org/package/2006/relationships"
-    with zipfile.ZipFile(docx_path, "r") as source, zipfile.ZipFile(
-        temp, "w", compression=zipfile.ZIP_DEFLATED
-    ) as target:
-        for info in source.infolist():
-            data = source.read(info.filename)
-            if info.filename == "word/document.xml":
-                data = re.sub(rb'\s+r:link="rId\d+"', b"", data)
-            elif info.filename == "word/_rels/document.xml.rels":
-                root = ET.fromstring(data)
-                for relationship in list(root):
-                    if (
-                        relationship.attrib.get("Type", "").endswith("/image")
-                        and relationship.attrib.get("TargetMode") == "External"
-                    ):
-                        root.remove(relationship)
-                data = ET.tostring(root, encoding="utf-8", xml_declaration=True)
-            target.writestr(info, data)
-    temp.replace(docx_path)
 
 
 def main():
@@ -176,7 +149,6 @@ def main():
             html_path.unlink()
         except FileNotFoundError:
             pass
-    remove_external_image_links(docx_path)
     print(f"DOCX: {docx_path} ({docx_path.stat().st_size:,} bytes)")
     print(f"PDF:  {pdf_path} ({pdf_path.stat().st_size:,} bytes)")
     print(f"Word page count: {pages}; embedded figures: 3; tables: 5")
