@@ -147,7 +147,7 @@ def nest_chart() -> None:
              f"{profile['row_count']} aggregate cells  •  {profile['published_cell_counts']['true']} published  •  {profile['suppressed_cells']} suppressed below sample floor {profile['minimum_sample_floor_values'][0]}",
              fontsize=9, color=MUTED, transform=top.transAxes)
     top.text(0.01, 0.07,
-             f"Two genuine captures ({delta['old_source_captured_at_utc']} → {delta['new_source_captured_at_utc']}): {delta['changed_cells']} of {delta['shared_cells']} cells changed; {delta['unchanged_shared_cells']} unchanged; {delta['added_cells']} added / {delta['removed_cells']} removed. Aggregate changes only—not rental-listing Velocity.",
+             f"Two genuine captures ({delta['old_source_captured_at_utc']} → {delta['new_source_captured_at_utc']}): {delta['changed_cells']} of {delta['shared_cells']} cells changed; {delta['unchanged_shared_cells']} unchanged; {delta['added_cells']} added / {delta['removed_cells']} removed. Aggregate changes only; not rental-listing Velocity.",
              fontsize=8.2, color=MUTED, transform=top.transAxes)
 
     ax = fig.add_subplot(grid[1])

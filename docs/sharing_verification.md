@@ -52,7 +52,9 @@ Kênh browser automation báo `The browser access host is unavailable`; truy c�
 
 ## Cây sạch và kiểm tra upload
 
-Kiểm tra synthetic và dashboard synthetic trên bản checkout riêng chỉ chứa cây file được đưa vào commit, không có raw, ledger làm việc, marts cũ, `.venv` hoặc dependency native trong project. Chỉ tái dùng dependency Python/Java/Hadoop đã cài ở ngoài repository. Kết quả synthetic phải là 7/7/5/4; public view trên clone sạch phải hiện thông báo thiếu input/output, không tự tạo dữ liệu.
+Đã tạo clone cục bộ mới bằng `git clone --no-hardlinks` từ commit `121ed28`, chỉ chứa file đã commit, không có raw, ledger làm việc, marts cũ, `.venv` hoặc dependency native trong project. Chỉ tái dùng dependency Python/Java/Hadoop đã cài ngoài repository. Chạy trong CMD bằng `python pipeline.py` nhận **7 raw, 7 active, 5 valid, 4 unique**. AppTest kiểm dashboard synthetic và public empty state trên clone này; public chỉ thông báo thiếu output, không tự tạo dữ liệu.
+
+Đã biên dịch 15 module trong clone và thử đóng ZIP mới vào thư mục tạm: 50 file, gồm đúng hai ledger tối thiểu và manifest chia sẻ; không có raw, marts hay môi trường ảo. Không ghi đè ZIP nộp bài lịch sử.
 
 Đã rà file được track, metadata đề xuất, đường dẫn trong Git history, nội dung ZIP/Office và kích thước file. Không tìm thấy pattern credential/token/private key hoặc raw/env trong archive được kiểm tra. Báo cáo học phần đã track có tên/mã học viên của nhóm; giữ tài liệu cho phạm vi repository private phục vụ nhóm, không thêm thông tin liên hệ. Quét pattern không phải công cụ chứng minh tuyệt đối rằng tài liệu không chứa bí mật.
 
