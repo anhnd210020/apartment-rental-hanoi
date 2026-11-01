@@ -1,56 +1,56 @@
-# IT5427 - Tích hợp dữ liệu thuê căn hộ Hà Nội
+# IT5427 - Hanoi apartment rental data integration
 
-Prototype học thuật theo **Hướng 1 (Direction 1)**: thu nhận dữ liệu khác định dạng, chuẩn hóa, kiểm tra chất lượng, tích hợp, lưu bảng phân tích và trình bày kết quả. PySpark chạy cục bộ `local[2]`; chưa triển khai cluster hoặc streaming. Giao diện và thông báo chương trình dùng tiếng Anh; README giải thích bằng tiếng Việt.
+An academic prototype for **Direction 1**: ingest data in different formats, normalize it, check quality, integrate sources, store analytical tables, and present the results. PySpark runs locally with `local[2]`; the project does not implement a cluster or streaming system. The application interface, program messages, and this README use English.
 
-**Demo nhanh:** clone → cài môi trường ở mục 3 → `python pipeline.py` → mở dashboard ở `?view=synthetic`. Fixture giả lập đã có trong Git. Luồng public cần thêm dữ liệu ngoài Git theo mục 5.
+**Quick demo:** clone the repository → set up the environment in section 3 → run `python pipeline.py` → open the dashboard with `?view=synthetic`. Generated fixtures are included in Git. The public workflow requires additional inputs outside Git, listed in section 5.
 
-## 1. Đã triển khai và giới hạn
+## 1. Implemented features and limitations
 
-- Ba adapter fixture mô phỏng Batdongsan, Nhà Tốt, Homedy: chuẩn hóa giá/diện tích, kiểm tra chất lượng, khử trùng lặp theo `(source, source_listing_id)`, tổng hợp và xuất bảng. **Fixture không phải listing thật**.
-- Public: đọc ba CSV của **một** bộ listing Kaggle, sàng lọc Hà Nội bằng tín hiệu trong tiêu đề và ledger rà soát thủ công; xuất quality, curated listings và summary.
-- OSM và WorldPop được chuẩn bị trước rồi tích hợp với summary listing ở **cấp thành phố Hà Nội**, khóa `city_key=VN-HN`. Không nối context tới từng listing hoặc khu phố.
-- NEST có job nhập CSV và job so sánh snapshot riêng. Mỗi dòng là ô thống kê từ kho nhà của NEST; nguồn này giữ riêng, không nối vào Kaggle và không gộp các trung vị.
-- Dashboard đọc output đã lưu. Mở dashboard và đổi bộ lọc không tự chạy Spark hoặc tải dữ liệu.
+- Three fixture adapters simulate Batdongsan, Nha Tot, and Homedy: normalize prices and areas, check quality, deduplicate by `(source, source_listing_id)`, aggregate, and export tables. **These fixtures are not real listings**.
+- The public workflow reads three CSVs from **one** Kaggle listing dataset, screens the Hanoi partition using title cues and manual review ledgers, and exports quality counts, curated listings, and summaries.
+- OSM and WorldPop are prepared before Spark processing, then integrated with the listing summary at **Hanoi city level**, using `city_key=VN-HN`. Context is not joined to individual listings or neighborhoods.
+- NEST has separate CSV ingestion and snapshot comparison jobs. Each row is an aggregate cell from NEST's own inventory. NEST remains separate from Kaggle, and its medians are not combined.
+- The dashboard reads saved outputs. Opening it or changing filters does not automatically run Spark or download data.
 
-Output public đã lưu tại máy phát triển có 13.785 dòng nguồn, 3.284 dòng Hà Nội, 303 ứng viên được rà soát, 106 tiêu đề có khả năng cho thuê căn hộ nguyên căn, 102 dòng có khoản tiền và diện tích dùng được. Trong 102 dòng, **92 chưa rõ kỳ giá**; thống kê tiền thuê tháng chỉ dùng **9 dòng có kỳ tháng và khoản tiền được xác minh khớp**. Đây là mẫu lịch sử nhỏ, dựa trên tiêu đề; không phải giao dịch hoặc ước lượng thị trường.
+The existing public outputs on the development machine contain 13,785 source rows, 3,284 Hanoi rows, 303 manually reviewed candidates, 106 titles suggesting likely whole-apartment rentals, and 102 rows with usable amounts and areas. Of those 102 rows, **92 have an unknown time basis**. Monthly rent statistics use only **9 records with a verified monthly basis and a matching structured amount**. This is a small historical sample assessed from titles; it does not establish completed transactions or market-wide estimates.
 
-Fingerprint SHA-256 dùng để nối ledger, không phải ID listing thật hoặc cơ chế khử trùng lặp liên nền tảng. Listing thiếu tọa độ/mã quận phường đáng tin cậy. WorldPop là mô hình dân số năm 2020; OSM đếm feature có tag, way không đồng nghĩa tuyến đường duy nhất. So sánh OSM batch và NEST aggregate không chứng minh thay đổi từng tin thuê (rental-listing Velocity). Xem [kiểm tra chất lượng](docs/data_quality_and_analysis_review.md).
+SHA-256 fingerprints link source records to review ledgers; they are not genuine listing IDs or a cross-platform deduplication mechanism. Listing records lack reliable coordinates and district/ward codes. WorldPop models population for 2020. OSM counts tagged features, and a way is not necessarily a unique road. OSM batch comparisons and NEST aggregate comparisons do not establish individual rental-listing changes or rental-listing Velocity. See the [data quality review](docs/data_quality_and_analysis_review.md).
 
-## 2. Nguồn và đơn vị quan sát
+## 2. Sources and observation grain
 
-| Nguồn | Vai trò và đơn vị quan sát | Truy cập, ghi công, giới hạn |
+| Source | Role and observation grain | Access, attribution, and limitations |
 |---|---|---|
-| [Kaggle - Vietnam House Rent Dataset](https://www.kaggle.com/datasets/vanviethieuanh/vietnam-house-rent-dataset), [repository tác giả](https://github.com/vanviethieuanh/dataset/tree/main/house-rent) | Một bộ listing hướng tới cho thuê; `hn.csv`, `hcm.csv`, `dn.csv`. Một dòng là bản ghi nguồn; có tín hiệu thuê/bán/phòng ở lẫn nhau. | Van Viet Hieu Anh; uploader khai báo CC0 nhưng nguồn website listing gốc/quyền upstream chưa xác minh. Giữ raw cục bộ. Kaggle có thể cần tài khoản; mirror/hash nằm trong manifest. |
-| [OSM / Geofabrik Vietnam](https://download.geofabrik.de/asia/vietnam.html) | Đối tượng địa lý trong PBF; chuẩn bị thành một JSON tổng hợp Hà Nội. Không phải listing thuê. | © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL 1.0. Dùng bản cố định `vietnam-260930.osm.pbf`, không thay bằng `latest`. |
-| [WorldPop Vietnam 2020](https://hub.worldpop.org/geodata/summary?id=6449) | Mỗi pixel raster là số người ước lượng; clip Hà Nội có 408.151 ô hợp lệ, Spark tổng hợp thành một dòng thành phố. | WorldPop / University of Southampton và các đơn vị trong [trích dẫn chính thức](https://doi.org/10.5258/SOTON/WP00645); CC BY 4.0. Không phải dân số quan sát ở từng địa chỉ. |
-| [NEST Living Hanoi Rent Index](https://nestliving.vn/rent-index), [điều khoản](https://nestliving.vn/terms) | Ô city, district, district × bedroom, property type. Một ô có thể đại diện nhiều homes; không phải một listing. | CSV cục bộ **tùy chọn**. Hồ sơ nguồn 29/10/2026 chưa xác định giấy phép mở/quyền tái sử dụng CSV rõ ràng. Giữ ghi công và raw ngoài Git. Dùng liên kết CSV của trang; không crawl listing. |
+| [Kaggle - Vietnam House Rent Dataset](https://www.kaggle.com/datasets/vanviethieuanh/vietnam-house-rent-dataset), [author's repository](https://github.com/vanviethieuanh/dataset/tree/main/house-rent) | One rental-oriented listing dataset: `hn.csv`, `hcm.csv`, `dn.csv`. Each row is a source record; rental, sale, and room-offer cues are mixed. | Van Viet Hieu Anh; the uploader declares CC0, but the original listing websites and upstream rights remain unverified. Keep raw files local. Kaggle may require an account; mirror URLs and hashes are recorded in the manifest. |
+| [OSM / Geofabrik Vietnam](https://download.geofabrik.de/asia/vietnam.html) | Geographic objects in a PBF, prepared into one Hanoi aggregate JSON record. This is geographic context rather than rental listing data. | © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL 1.0. Use the pinned `vietnam-260930.osm.pbf` snapshot, rather than replacing it with `latest`. |
+| [WorldPop Vietnam 2020](https://hub.worldpop.org/geodata/summary?id=6449) | Each raster pixel contains an estimated population count. The Hanoi clip has 408,151 valid cells, aggregated by Spark into one city row. | WorldPop / University of Southampton and the organizations named in the [official citation](https://doi.org/10.5258/SOTON/WP00645); CC BY 4.0. These are not observed population counts at individual addresses. |
+| [NEST Living Hanoi Rent Index](https://nestliving.vn/rent-index), [terms](https://nestliving.vn/terms) | City, district, district × bedroom, and property-type cells. One cell may represent many homes; it is not one listing. | An **optional** local CSV. The source assessment dated October 29, 2026 did not identify an open license or explicit CSV reuse grant. Retain attribution and keep raw files outside Git. Use the CSV link provided on the page; do not crawl listings. |
 
-Không cộng **listing records**, **raster cells**, **aggregate cells** thành số tin thuê. Snapshot NEST 29/10 có 45 ô: 1 city, 10 district, 29 district-bedroom, 5 property type; 17 ô bị ẩn thống kê vì mẫu nhỏ. Ô city gồm nhiều loại bất động sản (894 homes, trung vị 19,1 triệu VND/tháng); ô **Apartment** riêng có 708 homes, trung vị 19,5 triệu. Hai ô có tập quan sát khác nhau. Đây là snapshot lịch sử, không phải dữ liệu trực tiếp hiện tại.
+Do not add **listing records**, **raster cells**, and **aggregate cells** together as a rental listing count. The October 29 NEST snapshot has 45 cells: 1 city, 10 district, 29 district-bedroom, and 5 property-type cells. Statistics are suppressed in 17 small-sample cells. The city cell covers multiple property types (894 homes, median 19.1 million VND/month); the separate **Apartment** cell has 708 homes and a median of 19.5 million. These two cells represent different populations. These are historical snapshot values, not current live figures.
 
 ```mermaid
 flowchart TD
-    F[Fixture JSONL trong Git] --> S[PySpark synthetic]
-    S --> SM[CSV summary / quality và Parquet listing]
-    K[Kaggle CSV cục bộ + ledger] --> P[PySpark public]
-    O[Geofabrik PBF] --> G[Chuẩn bị context Hà Nội]
+    F[Fixture JSONL in Git] --> S[PySpark synthetic]
+    S --> SM[CSV summary / quality and Parquet listings]
+    K[Local Kaggle CSVs + ledgers] --> P[PySpark public]
+    O[Geofabrik PBF] --> G[Prepare Hanoi context]
     W[WorldPop GeoTIFF] --> G
     G --> J[OSM JSON + WorldPop cells]
     J --> P
-    P --> PM[Listing marts + tích hợp cấp thành phố]
-    N[NEST CSV tải thủ công] --> NI[Job ingest NEST riêng]
-    NI --> NM[Marts theo capture + manifest]
-    NI --> NC[Job so sánh snapshot riêng]
-    SM --> D[Streamlit: hai chế độ]
+    P --> PM[Listing marts + city-level integration]
+    N[Manually downloaded NEST CSV] --> NI[Separate NEST ingestion job]
+    NI --> NM[Capture-specific marts + manifest]
+    NI --> NC[Separate snapshot comparison job]
+    SM --> D[Streamlit: two views]
     PM --> D
     NM --> D
     NC --> D
 ```
 
-## 3. Cài đặt Windows - CMD
+## 3. Windows setup - CMD
 
-Các khối `cmd` dành cho **Command Prompt**. Chạy từ thư mục gốc repository. Đường dẫn `C:\Path\To\...` là ví dụ cần thay bằng cài đặt của bạn.
+The `cmd` blocks below are for **Command Prompt**. Run commands from the repository root. Paths such as `C:\Path\To\...` are placeholders that you must replace with your own installation paths.
 
-Cần Git, Python **3.12 64-bit**, JDK **17**. Máy phát triển dùng Python 3.12.1, Temurin 17.0.20.1 và PySpark 3.5.9. Bộ requirements public yêu cầu Python >=3.12 vì `rasterio>=1.5`; hướng dẫn Python 3.10 cũ không áp dụng cho toàn bộ project.
+Install Git, **64-bit Python 3.12**, and **JDK 17**. The development machine uses Python 3.12.1, Temurin 17.0.20.1, and PySpark 3.5.9. The full public requirements need Python >=3.12 because of `rasterio>=1.5`; the earlier Python 3.10 instructions do not cover the complete project.
 
 ```cmd
 git clone https://github.com/anhnd210020/apartment-rental-hanoi.git
@@ -60,15 +60,15 @@ call .venv\Scripts\activate.bat
 python -m pip install -r requirements-synthetic.txt
 ```
 
-Repository private cần tài khoản đã được cấp quyền. Có thể kích hoạt môi trường Python phù hợp có sẵn thay cho `.venv`; kiểm tra `where python`, `python --version`. Cài đầy đủ khi cần chuẩn bị public:
+This private repository requires an account with access. You may activate an existing compatible Python environment instead of creating `.venv`; check `where python` and `python --version`. Install the full requirements when preparing public inputs:
 
 ```cmd
 python -m pip install -r requirements.txt
 ```
 
-Synthetic cần PySpark, pandas, Streamlit, Plotly, pyarrow. Full requirements thêm osmium, rasterio, shapely cho địa lý; NumPy được kéo theo gói dữ liệu. pyarrow được khai báo để dashboard đọc Parquet. Không cần cài Spark riêng hoặc Hadoop cluster. Tham khảo [PySpark 3.5.9](https://spark.apache.org/docs/3.5.9/api/python/getting_started/install.html).
+The synthetic requirements include PySpark, pandas, Streamlit, Plotly, and pyarrow. The full requirements add osmium, rasterio, and shapely for geographic processing; NumPy is installed through the data packages' dependencies. pyarrow is declared explicitly so the dashboard can read Parquet. A separate Spark installation or Hadoop cluster is not required. See the [PySpark 3.5.9 installation documentation](https://spark.apache.org/docs/3.5.9/api/python/getting_started/install.html).
 
-Trong CMD đã kích hoạt `.venv`:
+In CMD, after activating `.venv`:
 
 ```cmd
 set "JAVA_HOME=C:\Path\To\JDK-17"
@@ -79,18 +79,18 @@ java -version
 python --version
 ```
 
-`JAVA_HOME` trỏ tới JDK, không phải `bin`. Hai biến `PYSPARK_*` phải trỏ tới **Python đang chạy lệnh**; thay đường dẫn nếu dùng môi trường có sẵn. `set` chỉ áp dụng trong cửa sổ CMD hiện tại.
+`JAVA_HOME` points to the JDK directory, not its `bin` directory. Both `PYSPARK_*` variables must point to **the Python executable running your commands**; adjust them if you use an existing environment. CMD `set` commands apply only to the current terminal window.
 
-Máy phát triển dùng thêm `winutils.exe` và `hadoop.dll` ở `%HADOOP_HOME%\bin` để Spark/Hadoop ghi file trên Windows. Khi đã có bản native được nhóm xác minh hoặc tự build từ nguồn Apache phù hợp:
+The development machine also uses `winutils.exe` and `hadoop.dll` in `%HADOOP_HOME%\bin` for Spark/Hadoop file writes on Windows. Once you have a compatible native build verified by the group or built from appropriate Apache sources:
 
 ```cmd
 set "HADOOP_HOME=C:\Path\To\Hadoop-Native"
 set "PATH=%HADOOP_HOME%\bin;%PATH%"
 ```
 
-Thư mục cục bộ tên `hadoop-3.3.6`, nhưng project **không có nguồn tải/build log** của hai binary; chưa thể xác nhận nhà cung cấp hoặc phiên bản nội tại từ tên thư mục. Binary không được đưa vào Git. Không dùng bản `winutils` tải ngẫu nhiên. [Biên bản chia sẻ](docs/sharing_verification.md) ghi hash bản cục bộ; nhóm cần xác minh provenance/build trước khi cấp native dependency cho máy mới. Linux/WSL với Python/Java cài bên trong là lựa chọn khác, chưa được thử trong lần chia sẻ này.
+The local directory is named `hadoop-3.3.6`, but the project **does not contain the binaries' download source or build logs**. The directory name alone cannot establish their supplier or actual build version. The binaries are not included in Git. Do not download an arbitrary `winutils` binary. The [sharing verification record](docs/sharing_verification.md) lists the local file hashes; the group must verify provenance/build information before supplying native dependencies for a new machine. Linux/WSL with Python and Java installed inside it is another option, but it was not tested during the sharing verification.
 
-**Cấu hình cục bộ đã kiểm tra**, chỉ dành cho máy tác giả:
+**Verified local configuration**, for the author's machine only:
 
 ```cmd
 call D:\envs\dev\Scripts\activate.bat
@@ -101,36 +101,36 @@ set "PYSPARK_PYTHON=D:\envs\dev\Scripts\python.exe"
 set "PYSPARK_DRIVER_PYTHON=D:\envs\dev\Scripts\python.exe"
 ```
 
-**PowerShell thay thế:** kích hoạt `.\.venv\Scripts\Activate.ps1`; dùng `$env:JAVA_HOME = 'C:\Path\To\JDK-17'`, `$env:HADOOP_HOME = 'C:\Path\To\Hadoop-Native'`, `$env:PATH = "$env:JAVA_HOME\bin;$env:HADOOP_HOME\bin;$env:PATH"`, `$env:PYSPARK_PYTHON = (Resolve-Path .\.venv\Scripts\python.exe).Path`, `$env:PYSPARK_DRIVER_PYTHON = $env:PYSPARK_PYTHON`. Có thể gọi Python trực tiếp khi không kích hoạt, vẫn đặt đúng worker/driver. Không trộn cú pháp PowerShell với CMD.
+**PowerShell alternative:** activate `.\.venv\Scripts\Activate.ps1`; use `$env:JAVA_HOME = 'C:\Path\To\JDK-17'`, `$env:HADOOP_HOME = 'C:\Path\To\Hadoop-Native'`, `$env:PATH = "$env:JAVA_HOME\bin;$env:HADOOP_HOME\bin;$env:PATH"`, `$env:PYSPARK_PYTHON = (Resolve-Path .\.venv\Scripts\python.exe).Path`, and `$env:PYSPARK_DRIVER_PYTHON = $env:PYSPARK_PYTHON`. You can call the Python executable directly without activating the environment, but still configure the worker/driver variables correctly. Keep PowerShell and CMD syntax separate.
 
-## 4. Luồng A - Synthetic demonstration
+## 4. Workflow A - Synthetic demonstration
 
 ```cmd
 python pipeline.py
 ```
 
-Chỉ đọc ba tệp đã commit trong `data/fixtures/`: `batdongsan.jsonl`, `nhatot.jsonl`, `homedy.jsonl`. Kết quả đã kiểm tra: **7 raw, 7 active, 5 valid, 4 unique**. Đây là dữ liệu giả lập để kiểm thử, không phải tin thuê thực tế của ba nền tảng.
+This reads only the three committed files in `data/fixtures/`: `batdongsan.jsonl`, `nhatot.jsonl`, and `homedy.jsonl`. Verified results: **7 raw, 7 active, 5 valid, 4 unique**. These are generated test fixtures, not actual rental listings from the three platforms.
 
-Output cục bộ: `data/curated/listings/` (Parquet sau dedup), `data/mart/summary/` (CSV tổng hợp), `data/mart/quality/` (CSV số dòng theo nguồn/lý do). Spark ghi `part-*` và `_SUCCESS`; không có run manifest riêng cho synthetic. Output không commit. Luồng này chạy từ clone sạch sau khi cài dependency Python/Java/native Windows.
+Local outputs are `data/curated/listings/` (deduplicated Parquet), `data/mart/summary/` (summary CSV), and `data/mart/quality/` (CSV counts by source/reason). Spark writes `part-*` files and `_SUCCESS` markers. The synthetic workflow has no separate run manifest. Outputs are not committed. This workflow runs from a clean clone after installing the Python, Java, and native Windows dependencies.
 
-## 5. Luồng B - Public-data processing
+## 5. Workflow B - Public-data processing
 
-**Clone sạch chưa có raw hoặc context.** Hai ledger tối thiểu trong `reproducibility/curation/` giữ nguyên fingerprint/quyết định hiện có, không chứa tiêu đề, địa chỉ, liên hệ hoặc nội dung listing. Số dòng nguồn và ghi chú chứa khoản tiền cụ thể không cần cho pipeline đã được bỏ khỏi bản chia sẻ; ledger làm việc cục bộ vẫn giữ nguyên.
+**A clean clone has no raw data or prepared context.** The two minimal ledgers in `reproducibility/curation/` preserve the existing fingerprints and review decisions without titles, addresses, contact details, or listing content. Source row numbers and notes containing specific source amounts were omitted from the shared copies because the pipeline does not need them. Local working ledgers retain their original contents.
 
-| Đường dẫn bắt buộc | Lấy từ đâu / cách tạo |
+| Required path | Source / preparation |
 |---|---|
-| `data/raw/public_datasets/kaggle_vietnam_house_rent/hn.csv`, `hcm.csv`, `dn.csv` | CSV đúng kích thước/hash trong `public_data_manifest.json`, từ tác giả/mirror hoặc bản nhóm được phép dùng. |
-| `data/raw/public_datasets/geofabrik/vietnam-260930.osm.pbf` | Geofabrik snapshot 30/09/2026, khoảng 329 MB. |
-| `data/raw/public_datasets/worldpop/vnm_ppp_2020.tif` | WorldPop Vietnam 2020 theo manifest, khoảng 197 MB. |
-| `data/raw/public_datasets/manifest.json` | Copy bản provenance lịch sử từ `reproducibility/public_inputs.manifest.json`. |
-| `data/curation/kaggle_hanoi_title_review.csv` | Copy metadata 303 dòng từ `reproducibility/curation/`; Spark đọc `source_fingerprint`, `review_status`, `review_reason`. |
-| `data/curation/kaggle_price_period_review.csv` | Copy metadata 11 dòng; Spark đọc `source_fingerprint`, `explicit_price_period`, `monthly_amount_status`. Chỉ 9 dòng `monthly` + `verified_match` dùng cho thống kê tháng. |
-| `data/public_pilot/context/hanoi_context.json` | `prepare_public_context.py` tạo JSON tổng hợp OSM và metadata WorldPop. |
-| `data/public_pilot/context/tables/worldpop_hanoi_cells.csv.gz`, `worldpop_hanoi_cells.schema.json` | `prepare_worldpop_cells.py` tạo từ raster Hà Nội đã clip. |
+| `data/raw/public_datasets/kaggle_vietnam_house_rent/hn.csv`, `hcm.csv`, `dn.csv` | CSVs matching the sizes/hashes in `public_data_manifest.json`, obtained from the author/mirror or a group copy you are permitted to use. |
+| `data/raw/public_datasets/geofabrik/vietnam-260930.osm.pbf` | Geofabrik snapshot dated September 30, 2026, approximately 329 MB. |
+| `data/raw/public_datasets/worldpop/vnm_ppp_2020.tif` | WorldPop Vietnam 2020 file specified in the manifest, approximately 197 MB. |
+| `data/raw/public_datasets/manifest.json` | Copy the historical provenance record from `reproducibility/public_inputs.manifest.json`. |
+| `data/curation/kaggle_hanoi_title_review.csv` | Copy the 303-row metadata file from `reproducibility/curation/`; Spark reads `source_fingerprint`, `review_status`, and `review_reason`. |
+| `data/curation/kaggle_price_period_review.csv` | Copy the 11-row metadata file; Spark reads `source_fingerprint`, `explicit_price_period`, and `monthly_amount_status`. Only the 9 `monthly` + `verified_match` records enter monthly statistics. |
+| `data/public_pilot/context/hanoi_context.json` | `prepare_public_context.py` creates the OSM aggregate JSON and WorldPop metadata. |
+| `data/public_pilot/context/tables/worldpop_hanoi_cells.csv.gz`, `worldpop_hanoi_cells.schema.json` | `prepare_worldpop_cells.py` creates these from the Hanoi-clipped raster. |
 
-`context/hanoi_boundary.geojson` và `context/worldpop_hanoi_2020.tif` là sản phẩm chuẩn bị địa lý, cần cho việc chuẩn bị/tạo lại bảng cells, đều ngoài Git. `data/curation/kaggle_title_audit_sample.csv` phục vụ audit trong báo cáo, **không cần để chạy pipeline** và không có trong bản metadata tối thiểu.
+`context/hanoi_boundary.geojson` and `context/worldpop_hanoi_2020.tif` are geographic preparation outputs needed to prepare/rebuild the cell table; both remain outside Git. `data/curation/kaggle_title_audit_sample.csv` supports the audit described in the report, but **is not required to run the pipeline** and is not included in the minimal shared metadata.
 
-Cài `requirements.txt`, kiểm điều kiện truy cập/sử dụng nguồn trước khi tải. Trên clone mới:
+Install `requirements.txt` and review the sources' access/use conditions before downloading. On a new clone:
 
 ```cmd
 python download_public_data.py
@@ -143,17 +143,17 @@ python prepare_worldpop_cells.py
 python pipeline.py --dataset public
 ```
 
-Downloader chỉ tải năm tệp trong mảng `files`, kiểm byte và SHA-256; không tải NEST/ledger và không tự tạo raw manifest. Manifest copy lưu **ngày tải lịch sử của nhóm**, không phải ngày tải vừa thực hiện trên máy bạn; run manifest mới ghi thời gian chạy mới. Giữ ledger riêng trước khi copy nếu đã chỉnh sửa. Nếu URL lịch sử không còn phục vụ đúng tệp, xin nhóm bản được phép dùng có hash khớp; không thay `latest`, sửa hash hoặc tự gán nhãn để đạt số lượng cũ.
+The downloader processes only the five entries in the manifest's `files` array and verifies byte sizes and SHA-256 hashes. It does not download NEST or ledgers, and it does not create the raw manifest automatically. The copied manifest records **the group's historical download time**, not the download you just performed; a new run manifest records the new processing time. Preserve your own ledger before copying if you have edited it. If a historical URL no longer serves the exact file, obtain a permitted copy with the matching hash from the group. Do not substitute `latest`, change hashes, or invent labels to reproduce the old counts.
 
-Lần đầu chuẩn bị context phải quét PBF/clip raster, có thể tốn RAM và thời gian. `prepare_public_context.py` tái dùng context/raster có sẵn, chỉ `--rebuild` mới ép xử lý lại. `prepare_worldpop_cells.py` tự tái dùng bảng khi hash raster khớp; **không có CLI `--rebuild`** (tham số đó chỉ có ở hàm nội bộ).
+The first context preparation scans the PBF and clips the raster, which may require substantial memory and time. `prepare_public_context.py` reuses existing context/raster outputs; `--rebuild` forces reprocessing. `prepare_worldpop_cells.py` automatically reuses its table when the raster hash matches. It **has no `--rebuild` CLI option**; that parameter exists only on its internal function.
 
-Nhóm có thể cấp đúng bộ prepared context nêu trên nếu có quyền chia sẻ. **Chỉ tải raw CSV không tái lập được public.** Muốn xem output đã lưu thì không cần chạy Spark lại.
+The group may provide the exact prepared context files listed above when sharing is permitted. **Downloading raw CSVs alone does not reproduce the public results.** Viewing saved outputs does not require rerunning Spark.
 
-Output dưới `data/public_pilot/`: `curated/listings/`, `mart/quality/`, `mart/summary/`, `mart/osm_city_context/`, `mart/worldpop_city_context/`, `mart/city_context/`, `mart/integrated_city/`, `context/tables/worldpop_hanoi_cells_parquet/`. `mart/run_manifest.json` ghi run ID, thời gian, lineage, số dòng/grain, hash, kích thước payload Parquet và thời gian từng stage. Context chỉ nối với summary thành phố; curated listing không nhận context từng địa chỉ.
+Outputs under `data/public_pilot/` include `curated/listings/`, `mart/quality/`, `mart/summary/`, `mart/osm_city_context/`, `mart/worldpop_city_context/`, `mart/city_context/`, `mart/integrated_city/`, and `context/tables/worldpop_hanoi_cells_parquet/`. `mart/run_manifest.json` records the run ID, timestamps, lineage, row counts/grains, hashes, Parquet payload sizes, and stage timings. Context is joined only to the city summary; curated listing records do not receive address-level context.
 
-## 6. Luồng C - NEST và so sánh snapshot
+## 6. Workflow C - NEST ingestion and snapshot comparison
 
-Đây là **hai job riêng**, không tự chạy trong public pipeline. Ingest đọc CSV tải thủ công đúng schema và **thời điểm tải thực tế có múi giờ**; không liên hệ website NEST. Các lệnh sau chỉ đúng khi có chính hai snapshot lịch sử trong [hồ sơ NEST](docs/nest_living_source_note.md) và được phép sử dụng:
+These are **two separate jobs** and do not run automatically in the public pipeline. Ingestion reads a manually downloaded CSV with the expected schema and its **actual retrieval timestamp with a time zone**. It does not contact the NEST website. The following commands apply only when you have the exact historical snapshots described in the [NEST source note](docs/nest_living_source_note.md) and permission to use them:
 
 ```cmd
 python ingest_nest_rent_index.py --input data\raw\nest_living\snapshots\nest_hanoi_rent_index_20261029T082644540Z.csv --retrieved-at-utc 2026-10-29T08:27:06.485Z
@@ -161,79 +161,79 @@ python ingest_nest_rent_index.py --input data\raw\nest_living\snapshots\nest_han
 python compare_nest_snapshots.py
 ```
 
-Với tệp khác, thay `--input` và `--retrieved-at-utc` bằng giá trị thật; không dùng timestamp ví dụ cho lần tải mới. `captured_at` lấy từ nguồn và quyết định snapshot ID. Ingest lưu CSV + `.manifest.json` ở `data/raw/nest_living/snapshots/`, Parquet `cells`, `city`, `district`, `district_bedroom`, `property_type` + manifest tại `data/public_pilot/mart/nest_rent_index/<snapshot-id>/`. `latest.json` trỏ tới capture được ingest gần nhất; nên nhập theo thứ tự thời gian.
+For another file, replace `--input` and `--retrieved-at-utc` with the real values. Do not reuse an example timestamp for a new download. The source `captured_at` value determines the snapshot ID. Ingestion stores the CSV and `.manifest.json` in `data/raw/nest_living/snapshots/`, then writes Parquet `cells`, `city`, `district`, `district_bedroom`, and `property_type` tables plus a manifest under `data/public_pilot/mart/nest_rent_index/<snapshot-id>/`. `latest.json` points to the most recently ingested capture, so ingest in chronological order.
 
-Comparator có `--snapshot-dir`, `--output`; mặc định so hai capture mới nhất theo thời gian nguồn và ghi `data/public_pilot/snapshot_comparison/nest_living_latest.json`. Dưới hai capture sẽ ghi `insufficient_snapshots`. Cặp 29/10 có 45 ô chung, 7 thay đổi, 38 không đổi, 0 thêm/bớt: thay đổi **ô tổng hợp**, không phải từng listing.
+The comparator supports `--snapshot-dir` and `--output`. By default it compares the two latest captures by source timestamp and writes `data/public_pilot/snapshot_comparison/nest_living_latest.json`. With fewer than two captures it records `insufficient_snapshots`. The October 29 pair has 45 shared cells, 7 changed, 38 unchanged, and 0 added/removed. These are **aggregate-cell changes**, not individual listing changes.
 
-`compare_geofabrik_snapshots.py` là job OSM batch độc lập, có `--old-manifest`, `--new-manifest`, `--output`. Cần manifest đóng băng ở `data/public_pilot/snapshot_comparison/manifests/`, PBF/update `.osc.gz` và boundary được chúng tham chiếu, tất cả ngoài Git. Không cần job này cho demo synthetic/public thông thường; xem [tài liệu public](docs/public_data_implementation.md).
+`compare_geofabrik_snapshots.py` is a separate OSM batch job with `--old-manifest`, `--new-manifest`, and `--output`. It requires frozen manifests under `data/public_pilot/snapshot_comparison/manifests/`, the PBF/update `.osc.gz` files, and the boundary referenced by those manifests, all outside Git. This job is not needed for the normal synthetic/public demonstration. See the [public implementation notes](docs/public_data_implementation.md).
 
-## 7. Luồng D - Dashboard và demo nhanh
+## 7. Workflow D - Dashboard and quick demo
 
 ```cmd
 python -m streamlit run dashboard.py --server.port 8501
 ```
 
-Mở <http://127.0.0.1:8501/?view=synthetic> và chọn **Synthetic fixtures** để xem fixture/lọc nguồn và loại nhà. Mở <http://127.0.0.1:8501/?view=public> hoặc chọn **Public-data prototype** để đọc output public. Mặc định không có query là public; clone mới sẽ hiện hướng dẫn thiếu output, không tự tạo dữ liệu.
+Open <http://127.0.0.1:8501/?view=synthetic> and select **Synthetic fixtures** to explore the generated fixtures and filter by source/property type. Open <http://127.0.0.1:8501/?view=public> or select **Public-data prototype** to read saved public outputs. Without a query parameter, the default is public. A new clone displays guidance about missing outputs instead of generating data automatically.
 
-Public view gồm **Kaggle - Screening and listed amounts** (quality/kỳ giá chưa rõ), **Kaggle - Verified monthly subset** (n=9), **Hanoi context - OSM and WorldPop** (cấp thành phố), **NEST Living - Separate aggregate statistics** (city khác Apartment, suppression, so snapshot), **Spark - Processing and provenance**, nguồn và ghi công. Thiếu NEST chỉ hiện thông báo tùy chọn khi các output public chính đã đủ.
+The public view contains **Kaggle - Screening and listed amounts** (quality and unknown time bases), **Kaggle - Verified monthly subset** (n=9), **Hanoi context - OSM and WorldPop** (city grain), **NEST Living - Separate aggregate statistics** (city versus Apartment cells, suppression, and snapshot comparison), **Spark - Processing and provenance**, and source attribution. When the main public outputs are available, missing NEST inputs result in an optional-input notice.
 
-Synthetic đọc `data/mart/{summary,quality}/`. Public cần tối thiểu `data/public_pilot/mart/{summary,quality,city_context}/`; để xem đầy đủ, nhận cả `mart/` và raw provenance manifests mà `nest_rent_index/latest.json`/manifest snapshot tham chiếu. Giữ nguyên cây thư mục/đường dẫn tương đối. Dashboard không chạy lại xử lý; sau khi output đổi, dùng **Clear cache** trong menu Streamlit hoặc khởi động lại server.
+The synthetic view reads `data/mart/{summary,quality}/`. The public view requires at least `data/public_pilot/mart/{summary,quality,city_context}/`. For the complete view, obtain the full `mart/` directory and the raw provenance manifests referenced by `nest_rent_index/latest.json` and the snapshot manifests. Preserve the directory structure and relative paths. The dashboard does not rerun processing. After outputs change, use **Clear cache** in the Streamlit menu or restart the server.
 
-Demo ngắn: chạy fixture → giải thích 7/7/5/4 → nếu đã có output public, chuyển public → đọc caveat kỳ giá và n=9 → xem context thành phố → phân biệt city/Apartment NEST → xem lineage. Dừng bằng **Ctrl+C** tại terminal. Nếu cổng bận:
+A short demo sequence: run the fixtures → explain 7/7/5/4 → switch to public if its outputs are available → explain the time-basis caveat and n=9 subset → show city context → distinguish NEST city and Apartment cells → show lineage. Stop the server with **Ctrl+C** in its terminal. If the port is occupied:
 
 ```cmd
 python -m streamlit run dashboard.py --server.port 8502
 ```
 
-Mở URL cổng 8502 tương ứng. Chỉ đọc output đã lưu không cần Java/Spark; Python và dependency đọc/hiển thị bảng vẫn cần cài.
+Open the corresponding URL on port 8502. Reading saved outputs does not require Java/Spark; the Python packages used to read and display tables are still required.
 
-## 8. Cấu trúc và cách khám phá mã
+## 8. Repository structure and exploring the code
 
-| Script/thư mục | Trách nhiệm |
+| Script/directory | Responsibility |
 |---|---|
-| `pipeline.py` | Nhánh synthetic; `--dataset public`; pilot cũ `--dataset bds-pilot` cần `data/raw/batdongsan/g1_20261002/listings.jsonl` ngoài Git. |
-| `dashboard.py` | Đọc bảng/manifest, hiển thị hai view; không đọc raw để xử lý. |
-| `download_public_data.py` | Tải/kiểm hash raw theo manifest; không có argparse. |
-| `prepare_public_context.py` | osmium/rasterio/shapely: boundary, OSM context, raster clip; có `--rebuild`. |
-| `prepare_worldpop_cells.py` | Raster clip → gzip CSV cells + schema/provenance; không có argparse. |
-| `ingest_nest_rent_index.py` | Kiểm schema/suppression/grain, đăng ký CSV NEST, tạo marts bằng Spark. |
-| `compare_nest_snapshots.py`, `compare_geofabrik_snapshots.py` | So snapshot aggregate NEST và batch OSM, hai job độc lập. |
-| `data/fixtures/` | Ba JSONL giả lập đã commit. Raw/context/mart thật trong `data/` bị ignore. |
-| `reproducibility/` | Provenance raw lịch sử + hai ledger tối thiểu; không có listing thô. |
-| `public_data_manifest.json` | URL, byte, hash raw cố định và hồ sơ NEST tùy chọn; khác run manifest đầu ra. |
-| `docs/reproduce_data_quality_funnel.py` | Kiểm raw/ledger/marts hiện có, vẽ funnel vào ảnh `*_reproduced.png`; cần matplotlib, pyarrow. |
-| `docs/reproduce_nest_property_types_vi.py` | Giữ tên tệp lịch sử; nhãn biểu đồ hiện bằng tiếng Anh. Kiểm capture NEST 29/10, vẽ ảnh riêng; cần pandas, pyarrow, matplotlib và raw/mart/manifest lịch sử. |
-| `docs/generate_project_figures.py` | Tạo hình kiến trúc/NEST từ dữ liệu cục bộ; cần matplotlib. |
-| `docs/export_final_report.py`, `docs/assemble_final_report.py` | Xuất/ghép báo cáo: Word, pywin32, markdown, python-docx/docxcompose tùy script. Assemble cần bìa ngoài repository. |
-| `docs/build_final_presentation.py` | Dựng slide qua PowerPoint COM; cần Office, pywin32, Pillow. |
-| `build_submission_zip.py` | Đóng gói nguồn/tài liệu, loại dữ liệu cục bộ. Dùng `--output` tới tệp mới nếu cần; ZIP lịch sử có thể khác code hiện tại. |
-| `docs/`, `submission/` | Tài liệu, báo cáo, slide, hình và gói nộp lịch sử; không chứa đủ public input. |
+| `pipeline.py` | Synthetic workflow; `--dataset public`; the legacy `--dataset bds-pilot` requires `data/raw/batdongsan/g1_20261002/listings.jsonl` outside Git. |
+| `dashboard.py` | Reads tables/manifests and presents two views; does not process raw inputs. |
+| `download_public_data.py` | Downloads/verifies pinned raw inputs using the manifest; has no argparse CLI. |
+| `prepare_public_context.py` | Uses osmium/rasterio/shapely to prepare the boundary, OSM context, and raster clip; supports `--rebuild`. |
+| `prepare_worldpop_cells.py` | Converts the clipped raster into a gzip cell CSV and schema/provenance record; has no argparse CLI. |
+| `ingest_nest_rent_index.py` | Validates schema, suppression, and grain; registers the NEST CSV and builds Spark marts. |
+| `compare_nest_snapshots.py`, `compare_geofabrik_snapshots.py` | Compare NEST aggregate snapshots and OSM batches as independent jobs. |
+| `data/fixtures/` | Three committed synthetic JSONL files. Real raw/context/mart files under `data/` are ignored. |
+| `reproducibility/` | Historical raw-input provenance and two minimal ledgers; no raw listing content. |
+| `public_data_manifest.json` | Pinned raw URLs, sizes, hashes, and optional NEST source records; distinct from an output run manifest. |
+| `docs/reproduce_data_quality_funnel.py` | Checks existing raw inputs/ledgers/marts and draws the funnel to a `*_reproduced.png` file; requires matplotlib and pyarrow. |
+| `docs/reproduce_nest_property_types_vi.py` | Retains its historical filename; chart labels now use English. Validates the October 29 NEST capture and draws a separate image; requires pandas, pyarrow, matplotlib, and historical raw/mart/manifest files. |
+| `docs/generate_project_figures.py` | Generates architecture/NEST figures from local data; requires matplotlib. |
+| `docs/export_final_report.py`, `docs/assemble_final_report.py` | Export/assemble reports using Word, pywin32, markdown, and python-docx/docxcompose as applicable. Assembly also requires a cover document outside the repository. |
+| `docs/build_final_presentation.py` | Builds slides through PowerPoint COM; requires Office, pywin32, and Pillow. |
+| `build_submission_zip.py` | Packages source/documentation while excluding local data. Use `--output` with a new destination if needed; historical ZIPs may differ from the current code. |
+| `docs/`, `submission/` | Documentation, reports, slides, figures, and historical submissions; these do not contain all public inputs. |
 
-Đọc `pipeline.py:main()` trước, rồi `normalize_fixture()` hoặc `run_public()`. Đối chiếu schema/manifest đầu ra với các hàm `load_*` trong dashboard. Script có argparse hỗ trợ `python <script>.py --help`; đừng thêm option vào các script không có parser.
+Start with `pipeline.py:main()`, then read `normalize_fixture()` or `run_public()`. Compare output schemas/manifests with the dashboard's `load_*` functions. Scripts with argparse support `python <script>.py --help`; do not add options to scripts without a parser.
 
-[Báo cáo DOCX](docs/IT5427_Final_Report_2026-10-29.docx), [PDF](docs/IT5427_Final_Report_2026-10-29.pdf), [slide](docs/IT5427_final_presentation.pptx), [runbook](docs/demo_runbook.md) giữ nội dung lịch sử. Không cần dựng lại để chạy demo; screenshot cũ có thể khác ngôn ngữ UI hiện tại.
+The [DOCX report](docs/IT5427_Final_Report_2026-10-29.docx), [PDF](docs/IT5427_Final_Report_2026-10-29.pdf), [slides](docs/IT5427_final_presentation.pptx), and [runbook](docs/demo_runbook.md) retain their historical contents. Rebuilding them is not required for the demo; older screenshots may use a different interface language.
 
-## 9. Lỗi thường gặp
+## 9. Common errors
 
-| Triệu chứng | Cách xử lý |
+| Symptom | Fix |
 |---|---|
-| Không tìm thấy Python/Java hoặc sai môi trường | Kích hoạt đúng env, kiểm `where python`, `where java`, `JAVA_HOME`, PATH. |
-| `JAVA_GATEWAY_EXITED` | Kiểm `java -version`, dùng JDK 17, `JAVA_HOME` trỏ thư mục JDK; đọc lỗi Java trước lỗi cuối. |
-| Python worker không khởi động / khác phiên bản | Đặt cả hai `PYSPARK_*` về Python đang chạy, chạy lại trong terminal đã cấu hình. |
-| Thiếu `winutils.exe`/`hadoop.dll`, lỗi native lúc ghi Windows | Kiểm `%HADOOP_HOME%\bin`, PATH, kiến trúc 64-bit và provenance/build với nhóm; không tải binary không rõ nguồn. |
-| `ModuleNotFoundError` / không đọc được Parquet | `python -m pip install -r requirements.txt` bằng đúng Python; public dashboard cần pyarrow. |
-| Không cài được rasterio trên Python 3.10/3.11 | Dùng Python 3.12 64-bit cho full requirements hiện tại. |
-| `PATH_NOT_FOUND`, thiếu ledger/raw manifest/table WorldPop | Làm đủ checklist và lệnh copy/chuẩn bị ở mục 5. |
-| Hash/kích thước raw không khớp | Giữ riêng bản sai, tìm đúng snapshot; không sửa hash hoặc thay `latest` để bỏ qua. |
-| Tổng WorldPop Spark không khớp context | Xác minh context/raster/CSV/schema cùng snapshot; tái tạo artifact không đồng nhất sau khi kiểm input, không sửa tổng bằng tay. |
-| Dashboard báo chưa có dữ liệu | Chạy đúng pipeline hoặc nhận output đầy đủ; synthetic/public có cây thư mục riêng. |
-| NEST không hiện / thiếu snapshot | Kiểm manifest/mart theo capture và `latest.json`; phải có hai capture thật mới so được. |
-| Cổng bận / dữ liệu cũ | Dừng server bạn đã mở hoặc đổi 8502; clear cache/khởi động lại sau khi output thay đổi. |
+| Python/Java not found, or the wrong environment is active | Activate the intended environment and check `where python`, `where java`, `JAVA_HOME`, and PATH. |
+| `JAVA_GATEWAY_EXITED` | Check `java -version`, use JDK 17, and point `JAVA_HOME` to the JDK directory. Read the Java error preceding the final message. |
+| Python worker fails to start / version mismatch | Point both `PYSPARK_*` variables to the running Python executable and retry in the configured terminal. |
+| Missing `winutils.exe`/`hadoop.dll`, or a native error during Windows writes | Check `%HADOOP_HOME%\bin`, PATH, 64-bit compatibility, and the build/provenance with the group. Do not download an unverified binary. |
+| `ModuleNotFoundError` / Parquet cannot be read | Run `python -m pip install -r requirements.txt` using the intended Python. The public dashboard needs pyarrow. |
+| rasterio cannot be installed on Python 3.10/3.11 | Use 64-bit Python 3.12 for the current full requirements. |
+| `PATH_NOT_FOUND`, missing ledger/raw manifest/WorldPop table | Complete the checklist and copy/preparation commands in section 5. |
+| Raw hash/size mismatch | Keep the mismatched copy separate and obtain the correct snapshot. Do not change hashes or substitute `latest` to bypass validation. |
+| Spark WorldPop totals disagree with the context | Verify that context, raster, CSV, and schema describe the same snapshot. Rebuild inconsistent artifacts after checking inputs; do not edit population totals manually. |
+| Dashboard reports missing data | Run the correct pipeline or obtain complete saved outputs. Synthetic and public outputs use separate directory trees. |
+| NEST is missing / insufficient snapshots | Check capture-specific manifests/marts and `latest.json`. Comparison requires two genuine captures. |
+| Port occupied / stale displayed data | Stop the server you started or use port 8502. Clear the cache/restart after outputs change. |
 
-## 10. Tái lập và nội dung chia sẻ
+## 10. Reproducibility and shared contents
 
-Git gồm code, requirements, fixture, metadata rà soát tối thiểu và tài liệu. `.gitignore` loại raw, ledger làm việc, context/marts cục bộ, env, Java/Hadoop, cache; không tự xóa tài liệu lịch sử đã track.
+Git contains code, requirements, fixtures, minimal review metadata, and documentation. `.gitignore` excludes raw inputs, working ledgers, local context/marts, environments, Java/Hadoop installations, and caches. It does not automatically remove historical documents already tracked.
 
-Clone sạch chạy synthetic sau khi cài dependency. Public cần raw cố định và bước chuẩn bị mục 5. Muốn demo từ output lưu sẵn, xin nhóm bộ `data/public_pilot/` phù hợp và quyền sử dụng; NEST optional còn cần raw provenance manifests được marts tham chiếu. Raw listing/NEST không nằm trong Git; không tạo dữ liệu/nhãn/snapshot thay thế để hoàn thành kiểm tra.
+A clean clone runs the synthetic workflow after dependency installation. The public workflow needs the pinned raw inputs and preparation steps in section 5. To demonstrate saved outputs, obtain the appropriate `data/public_pilot/` bundle and permission to use it from the group. Optional NEST data also needs the raw provenance manifests referenced by its marts. Raw listing/NEST files are not included in Git. No substitute data, labels, or snapshots were created to satisfy verification.
 
-[Biên bản chia sẻ](docs/sharing_verification.md) ghi kiểm tra thực sự đã chạy, dependency/provenance và phần chưa chạy. Báo cáo cũ gắn với run ID riêng; không phải bằng chứng đã chạy lại public trong lần chuẩn bị GitHub này.
+The [sharing verification record](docs/sharing_verification.md) documents the checks actually performed, dependency provenance, and checks not run. Historical reports refer to their own run IDs; they are not evidence that public processing was rerun during GitHub preparation.
