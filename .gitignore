@@ -23,3 +23,29 @@ data/public_pilot/
 data/generated/
 data/outputs/
 outputs/
+
+# Local tools, caches, Spark scratch files, and logs
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.idea/
+.vscode/
+spark-warehouse/
+metastore_db/
+derby.log
+*.log
+*.tmp
+*.pem
+*.key
+*.p12
+*.pfx
+java/
+jdk*/
+hadoop*/
+Thumbs.db
+.DS_Store
+
+# Generated packages; existing tracked submissions remain historical artifacts
+submission/*.zip
+submission/*.files.txt

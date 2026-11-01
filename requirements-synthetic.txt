@@ -1,0 +1,7 @@
+# Minimum Python packages for the synthetic Spark path and Streamlit demo.
+# Install a local Java 17 runtime separately; PySpark uses it to start Spark.
+pyspark==3.5.9
+pandas>=2.0,<3
+streamlit>=1.40,<2
+plotly>=5,<7
+pyarrow>=14,<25

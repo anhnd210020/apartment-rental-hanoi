@@ -1,0 +1,40 @@
+{
+  "downloaded_at_utc": "2026-10-02T11:34:17.285218+00:00",
+  "files": [
+    {
+      "path": "kaggle_vietnam_house_rent/dn.csv",
+      "bytes": 140446,
+      "sha256": "3134096d23a251f933eb93d5a702b64c4fc46c0a5ad905d8570feea87a32aceb",
+      "url": "https://raw.githubusercontent.com/vanviethieuanh/dataset/main/house-rent/csv/dn.csv",
+      "license_claim": "Kaggle uploader declares CC0"
+    },
+    {
+      "path": "kaggle_vietnam_house_rent/hcm.csv",
+      "bytes": 1751373,
+      "sha256": "dc585381a2a19838bbe0e5e0a5aa24e7000a832e34802517cd5fdf7c9d147e49",
+      "url": "https://raw.githubusercontent.com/vanviethieuanh/dataset/main/house-rent/csv/hcm.csv",
+      "license_claim": "Kaggle uploader declares CC0"
+    },
+    {
+      "path": "kaggle_vietnam_house_rent/hn.csv",
+      "bytes": 599720,
+      "sha256": "9cf5a60e5241a2f100eed551bf36f0afab0eb7bbb812cf42ca54fde9822a694d",
+      "url": "https://raw.githubusercontent.com/vanviethieuanh/dataset/main/house-rent/csv/hn.csv",
+      "license_claim": "Kaggle uploader declares CC0"
+    },
+    {
+      "path": "geofabrik/vietnam-260930.osm.pbf",
+      "bytes": 329495536,
+      "sha256": "91508f9392196f06754384065fcf0b3b9d2696fd08d75409834e5588c18ac743",
+      "url": "https://download.geofabrik.de/asia/vietnam-260930.osm.pbf",
+      "license": "ODbL 1.0"
+    },
+    {
+      "path": "worldpop/vnm_ppp_2020.tif",
+      "bytes": 196897622,
+      "sha256": "9f2c8188785bb0c67899f36a368e1e0ad3284a9cbd9917b3de8e5fb4af5688b2",
+      "url": "https://data.worldpop.org/GIS/Population/Global_2000_2020/2020/VNM/vnm_ppp_2020.tif",
+      "license": "CC BY 4.0"
+    }
+  ]
+}
