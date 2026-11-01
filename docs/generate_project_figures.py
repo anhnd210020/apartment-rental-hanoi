@@ -57,7 +57,7 @@ def architecture_png() -> None:
     ax.set_xlim(0, 14.2)
     ax.set_ylim(-0.95, 7.7)
     ax.axis("off")
-    ax.text(0.35, 7.38, "Apartment rental data prototype — implemented data paths",
+    ax.text(0.35, 7.38, "Apartment rental data prototype - implemented data paths",
             fontsize=18, weight="bold", color=NAVY)
     ax.text(0.35, 7.06, "Source roles and record grain remain explicit through the dashboard.",
             fontsize=10, color=MUTED)
@@ -86,7 +86,7 @@ def architecture_png() -> None:
     arrow(ax, (8.3, 3.18), (8.95, 4.42), GOLD, rad=-0.08)
 
     # Independent aggregate source lane; intentionally no arrow to the city join.
-    ax.text(0.35, 2.24, "OPTIONAL, INDEPENDENT RENTAL AGGREGATES — NOT LISTING ROWS", fontsize=9, weight="bold", color=PURPLE)
+    ax.text(0.35, 2.24, "OPTIONAL, INDEPENDENT RENTAL AGGREGATES - NOT LISTING ROWS", fontsize=9, weight="bold", color=PURPLE)
     rounded_box(ax, (0.35, 0.92), 2.15, 0.87, "NEST public CSV", "Monthly asking-rent\naggregate cells", PURPLE)
     rounded_box(ax, (3.2, 0.92), 2.15, 0.87, "Separate PySpark path", "Validate grain, suppression\nand source provenance", PURPLE, fill="#f7f3fb")
     rounded_box(ax, (6.05, 0.92), 2.25, 0.87, "NEST marts", "City, district, type\nand bedroom cuts", PURPLE)
@@ -105,7 +105,7 @@ def architecture_png() -> None:
     arrow(ax, (8.3, 3.18), (11.72, 4.1), GOLD, rad=0.05)
     arrow(ax, (11.15, 1.35), (11.72, 3.8), PURPLE, style="--", rad=-0.08)
 
-    ax.text(0.35, -0.03, "SYNTHETIC FIXTURES — SEPARATE TEST-ONLY PATH", fontsize=8.5, weight="bold", color=MUTED)
+    ax.text(0.35, -0.03, "SYNTHETIC FIXTURES - SEPARATE TEST-ONLY PATH", fontsize=8.5, weight="bold", color=MUTED)
     rounded_box(ax, (0.35, -0.8), 2.15, 0.65, "Fixture JSONL", "generated records", MUTED, fill="#f6f8fa", title_size=9, body_size=7.4)
     rounded_box(ax, (3.2, -0.8), 2.15, 0.65, "Synthetic PySpark", "dedupe + quality", MUTED, fill="#f6f8fa", title_size=9, body_size=7.4)
     rounded_box(ax, (6.05, -0.8), 2.25, 0.65, "Fixture marts", "not real listings", MUTED, fill="#f6f8fa", title_size=9, body_size=7.4)
@@ -139,7 +139,7 @@ def nest_chart() -> None:
     grid = fig.add_gridspec(2, 1, height_ratios=[1.05, 3.35], hspace=0.34)
     top = fig.add_subplot(grid[0])
     top.axis("off")
-    top.text(0.01, 0.96, "NEST Living — monthly asking-rent aggregates", fontsize=17, weight="bold", color=NAVY, transform=top.transAxes)
+    top.text(0.01, 0.96, "NEST Living - monthly asking-rent aggregates", fontsize=17, weight="bold", color=NAVY, transform=top.transAxes)
     top.text(0.01, 0.67,
              f"City cell: median {float(city['median_vnd'])/1_000_000:.1f}M VND/month  •  n={int(city['homes']):,} homes  •  captured {manifest['source_captured_at_utc']}",
              fontsize=10, color=INK, transform=top.transAxes)
